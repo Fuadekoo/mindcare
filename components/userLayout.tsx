@@ -67,14 +67,14 @@ function Sidebar({
   return (
     <aside
       className={cn(
-        "z-50 relative accent3 grid grid-cols-[auto_1fr] overflow-hidden-",
+        "z-50 relative accent3 grid grid-cols-[auto_1fr] overflow-hidden",
         sidebar ? "max-lg:absolute max-lg:inset-0 " : "max-lg:hidden"
       )}
     >
       <div
         className={cn(
-          "relative  bg-blue-950 grid grid-rows-[auto_1fr_auto] overflow-hidden-",
-          sidebar ? "max-xl:lg:w-50 w-70" : "max-xl:lg:w-14 w-20"
+          "relative  bg-blue-950 grid grid-rows-[auto_1fr_auto] overflow-hidden",
+          sidebar ? "max-xl:lg:w-60 w-80" : "max-xl:lg:w-14 w-20"
         )}
       >
         <Button
