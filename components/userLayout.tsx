@@ -9,7 +9,7 @@ import {
   DropdownTrigger,
   Link,
 } from "@heroui/react";
-import { LogOutIcon } from "lucide-react";
+import { LogOutIcon, UserIcon } from "lucide-react";
 // import Theme from "./theme";
 import { AlignLeft, ChevronLeft, ChevronRight, DoorOpen } from "lucide-react";
 import { useState } from "react";
@@ -20,6 +20,7 @@ import Image from "next/image";
 // import { div } from "framer-motion/client";
 import { addToast } from "@heroui/toast";
 import { logout } from "@/actions/common/authentication"; // Add this import
+import DateTimeDisplay from "./DateTimeDisplay";
 
 export default function UserLayout({
   children,
@@ -118,7 +119,7 @@ function Sidebar({
               variant={(selected ?? "") == url ? "solid" : "light"}
               className="w-full px-3 inline-flex gap-5 justify-start"
               as={Link}
-              href={`/${lang}/${role}/${url}`}
+              href={`/${lang}/${url}`}
             >
               {icon}
               {sidebar && <span className="px-5 capitalize ">{label}</span>}
@@ -159,13 +160,7 @@ function Header({
       </Button>
 
       <div className="flex justify-between items-center w-full">
-        <div className="flex items-center gap-2 px-4 py-1 rounded-lg bg-gray-700 text-white font-semibold text-base">
-          {new Date().toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </div>
+        <DateTimeDisplay />
         <User sidebar={true} />
       </div>
     </header>
@@ -180,22 +175,12 @@ function User({ sidebar }: { sidebar: boolean }) {
   return (
     <Dropdown className="overflow-hidden">
       <DropdownTrigger>
-        <Button
-          isIconOnly
-          color="primary"
-          variant="flat"
-          className={cn(
-            "w-auto h-fit inline-flex gap-5 justify-start",
-            sidebar ? "md:px-4 md:py-1" : ""
-          )}
-        >
-          <LogOutIcon className="size-10" />
-        </Button>
+        <UserIcon className="size-5" />
       </DropdownTrigger>
       <DropdownMenu color="primary" variant="flat">
         <DropdownItem
           key={"signout"}
-          startContent={<DoorOpen className="size-4" />}
+          startContent={<LogOutIcon className="size-4" />}
           color="danger"
           onClick={async () => {
             await logout();

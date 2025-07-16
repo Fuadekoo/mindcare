@@ -1,14 +1,9 @@
 "use client";
 import React from "react";
-import { Button } from "@heroui/react";
+import SignIn from "./[lang]/(guest)/signin/page";
 
 function Page() {
-  return (
-    <div>
-      <h1>hello fuad</h1>
-      <Button color="primary">Click Me</Button>
-    </div>
-  );
+  return <SignIn />;
 }
 
 export default Page;

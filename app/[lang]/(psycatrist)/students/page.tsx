@@ -103,8 +103,8 @@ function Page() {
   ];
 
   return (
-    <div>
-      <h1>Students</h1>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold text-gray-800">Students Data</h1>
       <CustomTable
         columns={columns}
         rows={rows}

@@ -64,7 +64,7 @@ function CustomTable({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="relative flex items-center">
           <Search
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-500"
             aria-hidden="true"
           />
           <input
@@ -76,7 +76,7 @@ function CustomTable({
             disabled={isLoading}
           />
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm text-secondary-600">
           <span>Show:</span>
           <select
             value={pageSize}
@@ -90,7 +90,7 @@ function CustomTable({
               </option>
             ))}
           </select>
-          <span>entries</span>
+          {/* <span>entries</span> */}
         </div>
       </div>
 
@@ -101,7 +101,7 @@ function CustomTable({
             {(column) => (
               <TableColumn
                 key={column.key}
-                className="bg-gray-100 p-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+                className="bg-primary-500 p-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider"
               >
                 {column.label}
               </TableColumn>
@@ -116,12 +116,12 @@ function CustomTable({
             {(item) => (
               <TableRow
                 key={item.key || item.id}
-                className="hover:bg-gray-50 border-b last:border-b-0"
+                className="hover:bg-primary-50 border-b last:border-b-0"
               >
                 {(columnKey) => {
                   const column = columns.find((col) => col.key === columnKey);
                   return (
-                    <TableCell className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                    <TableCell className="p-3 text-sm text-primary-700 whitespace-nowrap">
                       {column && column.renderCell ? (
                         column.renderCell(item)
                       ) : columnKey === "photo" &&
@@ -157,7 +157,7 @@ function CustomTable({
                                   document.createElement("span");
                                 errorText.textContent = "No preview";
                                 errorText.className =
-                                  "text-xs text-gray-400 no-preview-text";
+                                  "text-xs text-secondary-400 no-preview-text";
                                 parent.appendChild(errorText);
                               }
                             }}
@@ -178,7 +178,7 @@ function CustomTable({
       {/* Loading indicator */}
       {isLoading && rows.length === 0 && (
         <div className="flex justify-center items-center p-6">
-          <span className="text-gray-500">Loading data...</span>
+          <span className="text-secondary-500">Loading data...</span>
         </div>
       )}
 
@@ -186,23 +186,24 @@ function CustomTable({
       <div className="flex flex-wrap items-center justify-between gap-4 mt-4 p-2 text-sm">
         <div>
           Showing{" "}
-          <span className="font-medium">
+          <span className="font-medium text-primary-500">
             {rows.length > 0
               ? Math.min((page - 1) * pageSize + 1, totalRows)
               : 0}
           </span>{" "}
           to{" "}
-          <span className="font-medium">
+          <span className="font-medium text-primary-500">
             {Math.min(page * pageSize, totalRows)}
           </span>{" "}
-          of <span className="font-medium">{totalRows}</span> results
+          of <span className="font-medium text-primary-500">{totalRows}</span>{" "}
+          results
         </div>
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
             <button
               onClick={() => onPageChange(Math.max(1, page - 1))}
               disabled={page === 1 || isLoading}
-              className="px-2 py-1.5 bg-white hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-2 py-1.5 bg-background hover:bg-secondary-100 rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               aria-label="Previous page"
             >
               <ChevronLeft size={18} />
@@ -221,8 +222,8 @@ function CustomTable({
                   disabled={pg === page || isLoading}
                   className={`px-3 py-1.5 rounded ${
                     pg === page
-                      ? "bg-blue-600 text-white font-bold"
-                      : "bg-white hover:bg-gray-50"
+                      ? "bg-primary-600 text-background font-bold"
+                      : "bg-background hover:bg-secondary-100"
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {pg}
@@ -231,7 +232,7 @@ function CustomTable({
             <button
               onClick={() => onPageChange(Math.min(totalPages, page + 1))}
               disabled={page === totalPages || isLoading}
-              className="px-2 py-1.5 bg-white hover:bg-gray-50 rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-2 py-1.5 bg-background hover:bg-secondary-100 rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               aria-label="Next page"
             >
               <ChevronRight size={18} />
@@ -243,11 +244,11 @@ function CustomTable({
       {/* Image Zoom Modal */}
       {zoomedImageUrl && (
         <div
-          className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-secondary-50/30 backdrop-blur-md flex items-center justify-center z-50 p-4"
           onClick={handleCloseZoom}
         >
           <div
-            className="relative bg-white p-2 shadow-xl max-w-[95vw] max-h-[95vh] flex items-center justify-center"
+            className="relative bg-background p-2 shadow-xl max-w-[95vw] max-h-[95vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
@@ -260,7 +261,7 @@ function CustomTable({
             />
             <button
               onClick={handleCloseZoom}
-              className="absolute top-2 right-2 bg-gray-800 text-white p-1.5 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-white"
+              className="absolute top-2 right-2 bg-primary-800 text-background p-1.5 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-background"
               aria-label="Close zoomed image"
             >
               <X size={20} />
