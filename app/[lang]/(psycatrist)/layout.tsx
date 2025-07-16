@@ -10,6 +10,7 @@ import {
   Bell,
   User,
   Settings,
+  CastIcon,
 } from "lucide-react";
 
 // Updated menu with new items and suitable icons
@@ -19,6 +20,7 @@ const menu = [
   { label: "Track", url: "/track", icon: <Activity /> },
   { label: "Appointment", url: "/appointment", icon: <Calendar /> },
   { label: "Task", url: "/task", icon: <CheckSquare /> },
+  { label: "Case", url: "/case", icon: <CastIcon /> },
   //   { label: "Notifications", url: "/notification", icon: <Bell /> },
   { label: "Profile", url: "/profile", icon: <User /> },
   { label: "Settings", url: "/settings", icon: <Settings /> },
