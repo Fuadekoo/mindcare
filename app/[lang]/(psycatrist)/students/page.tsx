@@ -1,6 +1,7 @@
 "use client";
 import CustomTable from "@/components/custom-table";
 import React from "react";
+import { Plus, Check, X, Trash2, Search } from "lucide-react";
 
 // Sample data for students
 const sampleStudents = [
@@ -95,7 +96,7 @@ function Page() {
             }}
             disabled={isLoadingDelete}
           >
-            {isLoadingDelete ? "Deleting..." : "Delete"}
+            {isLoadingDelete ? "Deleting..." : <Trash2 size={16} />}
           </button>
         </div>
       ),

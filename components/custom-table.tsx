@@ -8,7 +8,7 @@ import {
   TableRow,
   TableCell,
   getKeyValue,
-} from "@heroui/react"; // <-- Make sure this is the correct package name. If not, replace with the correct one.
+} from "@heroui/react";
 import { X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
@@ -20,9 +20,9 @@ export interface ColumnDef<T> {
 
 interface CustomTableProps {
   rows: Array<
-    Record<string, string> & { key?: string | number; id?: string | number }
+    Record<string, any> & { key?: string | number; id?: string | number }
   >;
-  columns: Array<ColumnDef<Record<string, string>>>;
+  columns: Array<ColumnDef<Record<string, any>>>;
   totalRows: number;
   page: number;
   pageSize: number;
@@ -33,7 +33,7 @@ interface CustomTableProps {
   isLoading?: boolean;
 }
 
-const PAGE_SIZES = [1, 2, 50, 100];
+const PAGE_SIZES = [1, 25, 50, 100];
 
 function CustomTable({
   rows,
@@ -59,12 +59,12 @@ function CustomTable({
   };
 
   return (
-    <div className="">
+    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
       {/* Search and page size */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="relative flex items-center">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+        <div className="relative w-full sm:w-auto">
           <Search
-            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-500"
+            className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
             aria-hidden="true"
           />
           <input
@@ -72,16 +72,16 @@ function CustomTable({
             placeholder="Search..."
             value={searchValue}
             onChange={(e) => onSearch(e.target.value)}
-            className="px-3 py-2 pl-10 w-full sm:w-auto sm:min-w-[250px] text-sm"
+            className="w-full sm:w-64 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
             disabled={isLoading}
           />
         </div>
-        <div className="flex items-center gap-2 text-sm text-secondary-600">
-          <span>Show:</span>
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span>Rows per page:</span>
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="px-3 py-2"
+            className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
             disabled={isLoading}
           >
             {PAGE_SIZES.map((size) => (
@@ -90,18 +90,17 @@ function CustomTable({
               </option>
             ))}
           </select>
-          {/* <span>entries</span> */}
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-auto">
+      <div className="overflow-x-auto border border-gray-200 rounded-lg">
         <Table aria-label="Data table with dynamic content">
           <TableHeader columns={columns}>
             {(column) => (
               <TableColumn
                 key={column.key}
-                className="bg-primary-500 p-3 text-left text-xs font-medium text-primary-600 uppercase tracking-wider"
+                className="bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 {column.label}
               </TableColumn>
@@ -116,32 +115,23 @@ function CustomTable({
             {(item) => (
               <TableRow
                 key={item.key || item.id}
-                className="hover:bg-primary-50 border-b last:border-b-0"
+                className="hover:bg-gray-50 border-b border-gray-200 last:border-b-0"
               >
                 {(columnKey) => {
                   const column = columns.find((col) => col.key === columnKey);
                   return (
-                    <TableCell className="p-3 text-sm text-primary-700 whitespace-nowrap">
+                    <TableCell className="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
                       {column && column.renderCell ? (
                         column.renderCell(item)
                       ) : columnKey === "photo" &&
                         typeof item.photo === "string" &&
                         item.photo ? (
-                        <div
-                          style={{
-                            width: "100px",
-                            height: "100px",
-                            position: "relative",
-                          }}
-                        >
+                        <div className="relative w-16 h-16">
                           <Image
                             src={`/api/filedata/${item.photo}`}
-                            alt={`Proof for ${item.id || item.key || "entry"}`}
+                            alt={`Photo for ${item.id || item.key}`}
                             fill
-                            style={{
-                              objectFit: "cover",
-                              cursor: "pointer",
-                            }}
+                            className="object-cover rounded-md cursor-pointer"
                             onClick={() =>
                               handleImageClick(`/api/filedata/${item.photo}`)
                             }
@@ -157,7 +147,7 @@ function CustomTable({
                                   document.createElement("span");
                                 errorText.textContent = "No preview";
                                 errorText.className =
-                                  "text-xs text-secondary-400 no-preview-text";
+                                  "text-xs text-gray-400 no-preview-text flex items-center justify-center h-full";
                                 parent.appendChild(errorText);
                               }
                             }}
@@ -176,26 +166,26 @@ function CustomTable({
       </div>
 
       {/* Loading indicator */}
-      {isLoading && rows.length === 0 && (
+      {isLoading && (
         <div className="flex justify-center items-center p-6">
-          <span className="text-secondary-500">Loading data...</span>
+          <span className="text-gray-500">Loading data...</span>
         </div>
       )}
 
       {/* Pagination */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mt-4 p-2 text-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 text-sm text-gray-700">
         <div>
           Showing{" "}
-          <span className="font-medium text-primary-500">
+          <span className="font-semibold text-gray-900">
             {rows.length > 0
               ? Math.min((page - 1) * pageSize + 1, totalRows)
               : 0}
           </span>{" "}
           to{" "}
-          <span className="font-medium text-primary-500">
+          <span className="font-semibold text-gray-900">
             {Math.min(page * pageSize, totalRows)}
           </span>{" "}
-          of <span className="font-medium text-primary-500">{totalRows}</span>{" "}
+          of <span className="font-semibold text-gray-900">{totalRows}</span>{" "}
           results
         </div>
         {totalPages > 1 && (
@@ -203,39 +193,46 @@ function CustomTable({
             <button
               onClick={() => onPageChange(Math.max(1, page - 1))}
               disabled={page === 1 || isLoading}
-              className="px-2 py-1.5 bg-background hover:bg-secondary-100 rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="p-2 bg-white border border-gray-300 hover:bg-gray-100 rounded-md disabled:opacity-50 flex items-center"
               aria-label="Previous page"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={16} />
             </button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter((pg) => {
-                if (totalPages <= 3) return true;
-                if (page <= 2) return pg <= 3;
-                if (page >= totalPages - 1) return pg >= totalPages - 2;
-                return Math.abs(pg - page) <= 1;
+                if (totalPages <= 5) return true;
+                if (page <= 3) return pg <= 4 || pg === totalPages;
+                if (page >= totalPages - 2)
+                  return pg >= totalPages - 3 || pg === 1;
+                return (
+                  Math.abs(pg - page) <= 1 || pg === 1 || pg === totalPages
+                );
               })
-              .map((pg) => (
-                <button
-                  key={pg}
-                  onClick={() => onPageChange(pg)}
-                  disabled={pg === page || isLoading}
-                  className={`px-3 py-1.5 rounded ${
-                    pg === page
-                      ? "bg-primary-600 text-background font-bold"
-                      : "bg-background hover:bg-secondary-100"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {pg}
-                </button>
+              .map((pg, i, arr) => (
+                <React.Fragment key={pg}>
+                  {i > 0 && pg - arr[i - 1] > 1 && (
+                    <span className="px-2">...</span>
+                  )}
+                  <button
+                    onClick={() => onPageChange(pg)}
+                    disabled={pg === page || isLoading}
+                    className={`px-4 py-2 rounded-md text-sm font-medium ${
+                      pg === page
+                        ? "bg-blue-600 text-white"
+                        : "bg-white border border-gray-300 hover:bg-gray-100"
+                    } disabled:opacity-50`}
+                  >
+                    {pg}
+                  </button>
+                </React.Fragment>
               ))}
             <button
               onClick={() => onPageChange(Math.min(totalPages, page + 1))}
               disabled={page === totalPages || isLoading}
-              className="px-2 py-1.5 bg-background hover:bg-secondary-100 rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="p-2 bg-white border border-gray-300 hover:bg-gray-100 rounded-md disabled:opacity-50 flex items-center"
               aria-label="Next page"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={16} />
             </button>
           </div>
         )}
@@ -244,24 +241,23 @@ function CustomTable({
       {/* Image Zoom Modal */}
       {zoomedImageUrl && (
         <div
-          className="fixed inset-0 bg-secondary-50/30 backdrop-blur-md flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleCloseZoom}
         >
           <div
-            className="relative bg-background p-2 shadow-xl max-w-[95vw] max-h-[95vh] flex items-center justify-center"
+            className="relative bg-white p-2 rounded-lg shadow-xl max-w-[95vw] max-h-[95vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
               src={zoomedImageUrl}
-              alt="Zoomed proof"
-              className="block max-w-[98vw] max-h-[90vh] object-contain"
-              width={900}
-              height={600}
-              style={{ width: "900px", height: "600px" }}
+              alt="Zoomed content"
+              className="block max-w-[90vw] max-h-[90vh] object-contain rounded"
+              width={1200}
+              height={800}
             />
             <button
               onClick={handleCloseZoom}
-              className="absolute top-2 right-2 bg-primary-800 text-background p-1.5 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-background"
+              className="absolute top-2 right-2 bg-black/50 text-white p-1.5 rounded-full hover:bg-black/75 focus:outline-none"
               aria-label="Close zoomed image"
             >
               <X size={20} />

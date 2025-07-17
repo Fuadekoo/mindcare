@@ -51,15 +51,27 @@ model appointment {
 // history model (it has a diagonistic,obervation, and treatmentor medication)
 
 model history {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   studentId   Int
+  historyCode String      @unique @default(cuid())
+  patientData patientType @relation(fields: [id], references: [id])
+  
   diagnosis   String?
   observation String?
   treatment   String?
-  solved      Boolean  @default(false)
-  student     student  @relation(fields: [studentId], references: [wdt_ID])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  solved      Boolean     @default(false)
+  student     student     @relation(fields: [studentId], references: [wdt_ID])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model patientType {
+  id          Int       @id @default(autoincrement())
+  type        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  history     history[]
 }
 
 model progressTracking {
