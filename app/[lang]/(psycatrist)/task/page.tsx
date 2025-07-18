@@ -1,8 +1,20 @@
 "use client";
 import React, { useState } from "react";
 import { Plus, X } from "lucide-react";
-
-// Define the type for a single task
+import useAction from "@/hooks/useActions";
+import {
+  getTasks,
+  changeStatus,
+  createTask,
+  deleteTask,
+  updateTask,
+} from "@/actions/psycatrist/task";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
+import { addToast } from "@heroui/toast";
+import { z } from "zod";
+import { taskSchema } from "@/lib/zodSchema";
 interface Task {
   id: number;
   text: string;
@@ -10,6 +22,43 @@ interface Task {
 }
 
 function TodoPage() {
+  const {
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<z.infer<typeof taskSchema>>({
+    resolver: zodResolver(taskSchema),
+    mode: "onChange",
+  });
+
+  const [taskData, refreshTasks, isLoadingTasks] = useAction(getTasks, [
+    true,
+    () => {},
+  ]);
+
+  const [taskResponse, createAction, isCreatingTask] = useAction(createTask, [
+    ,
+    () => {},
+  ]);
+
+  const [updateResponse, updateAction, isUpdatingTask] = useAction(updateTask, [
+    ,
+    () => {},
+  ]);
+
+  const [deleteResponse, deleteAction, isDeletingTask] = useAction(deleteTask, [
+    ,
+    () => {},
+  ]);
+
+  const [statusResponse, changeStatusAction, isChangingStatus] = useAction(
+    changeStatus,
+    [, () => {}]
+  );
+
   // State for the list of tasks
   const [tasks, setTasks] = useState<Task[]>([
     { id: 1, text: "This is an example of task #1", completed: true },
