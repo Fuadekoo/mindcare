@@ -18,3 +18,17 @@ export const changePasswordSchema = z.object({
     .min(8, "Confirm password must be at least 8 characters long"),
 });
 export type ChangePasswordType = z.infer<typeof changePasswordSchema>;
+
+export const taskSchema = z.object({
+  note: z.string().min(1, "Note is required"),
+});
+export type TaskType = z.infer<typeof taskSchema>;
+
+export const caseSchema = z.object({
+  studentId: z.number().min(1, "Student ID is required"),
+  description: z.string().min(1, "Description is required"),
+  status: z.enum(["open", "in-progress", "closed"], {
+    errorMap: () => ({ message: "Status must be one of open, in-progress, or closed" }),
+  }),
+});
+export type CaseType = z.infer<typeof caseSchema>;

@@ -38,7 +38,7 @@ model student {
 }
 
 model appointment {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   studentId Int
   date      DateTime
   time      String
@@ -51,22 +51,46 @@ model appointment {
 // history model (it has a diagonistic,obervation, and treatmentor medication)
 
 model history {
-  id          Int         @id @default(autoincrement())
-  studentId   Int
-  historyCode String      @unique @default(cuid())
-  patientData patientType @relation(fields: [id], references: [id])
-  
-  diagnosis   String?
-  observation String?
-  treatment   String?
-  solved      Boolean     @default(false)
-  student     student     @relation(fields: [studentId], references: [wdt_ID])
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id              String        @id @default(cuid())
+  studentId       Int
+  historyCode     String        @unique @default(cuid())
+  patientTypeData String
+  solved          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  student         student       @relation(fields: [studentId], references: [wdt_ID])
+  patientData     patientType   @relation(fields: [patientTypeData], references: [id])
+  diagnosis       diagnosis[]
+  observation     observation[]
+  treatment       treatment[]
+}
+
+model diagnosis {
+  id          String   @id @default(cuid())
+  description String
+  historyId   String
+  history     history  @relation(fields: [historyId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model observation {
+  id          String   @id @default(cuid())
+  description String
+  historyId   String
+  history     history  @relation(fields: [historyId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model treatment {
+  id          String   @id @default(cuid())
+  description String
+  historyId   String
+  history     history  @relation(fields: [historyId], references: [id])
+  createdAt   DateTime @default(now())
 }
 
 model patientType {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(cuid())
   type        String    @unique
   description String?
   createdAt   DateTime  @default(now())
@@ -75,7 +99,7 @@ model patientType {
 }
 
 model progressTracking {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   studentId Int
   progress  String?
   createdAt DateTime @default(now())
@@ -84,8 +108,9 @@ model progressTracking {
 }
 
 model todoList {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   note      String
+  status    String   @default("pending")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
