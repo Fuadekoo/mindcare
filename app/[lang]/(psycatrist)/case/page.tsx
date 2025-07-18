@@ -1,166 +1,228 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@heroui/react";
-import { Input } from "@heroui/react";
 import { useRouter } from "next/navigation";
+import { CustomCard } from "@/components/custom-card";
+import { addToast } from "@heroui/toast";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Plus } from "lucide-react";
+
+// Zod schema for case validation
+const caseSchema = z.object({
+  name: z.string().min(3, "Patient name is required."),
+  problemType: z.string().min(3, "Problem type is required."),
+  diagnosis: z.string().min(3, "Diagnosis is required."),
+  date: z.string().min(1, "Date is required."),
+});
+
+// Type for a single patient case
+type PatientCase = {
+  id: string;
+  name: string;
+  problemType: string;
+  status: "solved" | "pending";
+  date: string;
+  diagnosis: string;
+};
+
+// Sample data
+const samplePatientHistory: PatientCase[] = [
+  {
+    id: "1",
+    name: "John Doe",
+    problemType: "Anxiety",
+    status: "solved",
+    date: "2024-06-10",
+    diagnosis: "Generalized Anxiety Disorder",
+  },
+  {
+    id: "2",
+    name: "Jane Smith",
+    problemType: "Depression",
+    status: "pending",
+    date: "2024-06-12",
+    diagnosis: "Major Depressive Disorder",
+  },
+  {
+    id: "3",
+    name: "Alice Johnson",
+    problemType: "Stress",
+    status: "solved",
+    date: "2024-06-15",
+    diagnosis: "Acute Stress Reaction",
+  },
+  {
+    id: "4",
+    name: "Bob Brown",
+    problemType: "PTSD",
+    status: "pending",
+    date: "2024-06-20",
+    diagnosis: "Post-Traumatic Stress Disorder",
+  },
+  {
+    id: "5",
+    name: "Charlie Green",
+    problemType: "OCD",
+    status: "solved",
+    date: "2024-06-22",
+    diagnosis: "Obsessive-Compulsive Disorder",
+  },
+  {
+    id: "6",
+    name: "Diana Prince",
+    problemType: "Bipolar",
+    status: "pending",
+    date: "2024-06-25",
+    diagnosis: "Bipolar Disorder",
+  },
+];
 
 function Page() {
+  const [patientHistory, setPatientHistory] =
+    useState<PatientCase[]>(samplePatientHistory);
+  const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const patientHistory = [
-    {
-      id: 1,
-      name: "John Doe",
-      problemType: "Anxiety",
-      status: "solved",
-      date: "2024-06-10",
-      diagnosis: "Generalized Anxiety Disorder",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      problemType: "Depression",
-      status: "pending",
-      date: "2024-06-12",
-      diagnosis: "Major Depressive Disorder",
-    },
-    {
-      id: 3,
-      name: "Michael Brown",
-      problemType: "Stress",
-      status: "solved",
-      date: "2024-06-14",
-      diagnosis: "Acute Stress Reaction",
-    },
-    {
-      id: 4,
-      name: "Emily Johnson",
-      problemType: "Bipolar",
-      status: "pending",
-      date: "2024-06-15",
-      diagnosis: "Bipolar II Disorder",
-    },
-    {
-      id: 5,
-      name: "Chris Lee",
-      problemType: "OCD",
-      status: "solved",
-      date: "2024-06-16",
-      diagnosis: "Obsessive-Compulsive Disorder",
-    },
-    {
-      id: 6,
-      name: "Sara Kim",
-      problemType: "PTSD",
-      status: "pending",
-      date: "2024-06-17",
-      diagnosis: "Post-Traumatic Stress Disorder",
-    },
-    {
-      id: 7,
-      name: "David Wilson",
-      problemType: "Phobia",
-      status: "solved",
-      date: "2024-06-18",
-      diagnosis: "Social Phobia",
-    },
-    {
-      id: 8,
-      name: "Linda Martinez",
-      problemType: "Eating Disorder",
-      status: "pending",
-      date: "2024-06-19",
-      diagnosis: "Anorexia Nervosa",
-    },
-    {
-      id: 9,
-      name: "James Anderson",
-      problemType: "ADHD",
-      status: "solved",
-      date: "2024-06-20",
-      diagnosis: "Attention Deficit Hyperactivity Disorder",
-    },
-    {
-      id: 10,
-      name: "Patricia Thomas",
-      problemType: "Schizophrenia",
-      status: "pending",
-      date: "2024-06-21",
-      diagnosis: "Paranoid Schizophrenia",
-    },
-  ];
+
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm<z.infer<typeof caseSchema>>({
+    resolver: zodResolver(caseSchema),
+  });
+
+  const handleAddCase = () => {
+    reset();
+    setShowModal(true);
+  };
+
+  const handleDeleteCase = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this case?")) {
+      setPatientHistory((prev) => prev.filter((p) => p.id !== id));
+      addToast({ title: "Success", description: "Case has been deleted." });
+    }
+  };
+
+  const onSubmit = (data: z.infer<typeof caseSchema>) => {
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      const newCase: PatientCase = {
+        id: Date.now().toString(),
+        ...data,
+        status: "pending",
+      };
+      setPatientHistory((prev) => [newCase, ...prev]);
+      addToast({ title: "Success", description: "New case has been added." });
+      setIsLoading(false);
+      setShowModal(false);
+    }, 1000);
+  };
+
   return (
-    <div>
-      <div className="border-2 border-primary-500 rounded-xl p-4">
-        <h1 className="text-2xl font-bold mb-4">Students</h1>
-        <div className="grid grid-cols-2 justify-between items-center border-1 border-secondary-500 rounded-xl p-2 mb-4">
-          <div className="gap-2 grid sm:grid-cols-1">
-            <Input
-              type="text"
-              variant="bordered"
-              placeholder="Search by name or ID"
-              className="md:w-full text-primary-900 mb-2"
-            />
-            <select className="p-2 rounded border border-gray-300">
-              <option value="">All</option>
-              <option value="undergraduate">solved</option>
-              <option value="postgraduate">pending</option>
-              <option value="phd">not solved</option>
-            </select>
-          </div>
-          <div className="justify-self-end">
-            <Button
-              color="primary"
-              variant="solid"
-              className="px-4 py-2 rounded"
-              onClick={() => alert("Add New Student")}
-            >
-              Add
-            </Button>
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">
+          Patient Case History
+        </h1>
+        <Button color="primary" variant="solid" onClick={handleAddCase}>
+          <Plus size={20} className="mr-2" />
+          Add New Case
+        </Button>
+      </div>
+
+      <CustomCard patientHistory={patientHistory} onDelete={handleDeleteCase} />
+
+      {/* Modal for Add New Case */}
+      {showModal && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Add New Case</h2>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="flex flex-col gap-4">
+                <div>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    placeholder="Patient Name"
+                    {...register("name")}
+                    disabled={isLoading}
+                  />
+                  {errors.name && (
+                    <span className="text-red-500 text-xs mt-1">
+                      {errors.name.message}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    placeholder="Problem Type"
+                    {...register("problemType")}
+                    disabled={isLoading}
+                  />
+                  {errors.problemType && (
+                    <span className="text-red-500 text-xs mt-1">
+                      {errors.problemType.message}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <textarea
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    placeholder="Diagnosis"
+                    rows={3}
+                    {...register("diagnosis")}
+                    disabled={isLoading}
+                  />
+                  {errors.diagnosis && (
+                    <span className="text-red-500 text-xs mt-1">
+                      {errors.diagnosis.message}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="date"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    {...register("date")}
+                    disabled={isLoading}
+                  />
+                  {errors.date && (
+                    <span className="text-red-500 text-xs mt-1">
+                      {errors.date.message}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onPress={() => setShowModal(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  type="submit"
+                  isLoading={isLoading}
+                  disabled={isLoading}
+                >
+                  {isLoading && (
+                    <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
+                  )}
+                  Add Case
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4 ">
-        {patientHistory.map((patient) => (
-          <div
-            key={patient.id}
-            className="border-2 border-primary-500 rounded-xl h-60 p-4 flex flex-col justify-between"
-          >
-            <div>
-              <h2 className="text-lg font-semibold mb-1">{patient.name}</h2>
-              <p className="text-sm text-primary-700 mb-1">
-                <span className="font-medium">Problem:</span>{" "}
-                {patient.problemType}
-              </p>
-              <p className="text-sm text-primary-700 mb-1">
-                <span className="font-medium">Diagnosis:</span>{" "}
-                {patient.diagnosis}
-              </p>
-              <p className="text-sm text-primary-700 mb-1">
-                <span className="font-medium">Date:</span> {patient.date}
-              </p>
-            </div>
-            <div className="flex justify-between items-center">
-              <span
-                className={`inline-block px-2 py-1 rounded text-xs font-bold ${
-                  patient.status === "solved"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-              >
-                {patient.status}
-              </span>
-              <Button
-                color="secondary"
-                variant="bordered"
-                className="ml-2"
-                onClick={() => router.push(`/en/case/${patient.id}`)}
-              >
-                Details
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+      )}
     </div>
   );
 }

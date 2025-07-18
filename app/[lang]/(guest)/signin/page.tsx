@@ -38,6 +38,8 @@ function LoginPage() {
     },
   ]);
 
+
+
   return (
     <div className="min-h-dvh flex items-center justify-center bg-primary-50">
       <div className="grid grid-cols-1 lg:grid-cols-2 w-full h-[calc(80vh-4rem)] max-w-4xl bg-white rounded-lg shadow-lg p-8 m-2">

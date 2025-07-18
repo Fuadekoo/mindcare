@@ -1,45 +1,98 @@
-"use client";
-import { Doughnut } from "react-chartjs-2";
 import React from "react";
-import { Chart, ArcElement, Tooltip, Legend } from "chart.js";
+import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 
-Chart.register(ArcElement, Tooltip, Legend);
+type TooltipPayload = ReadonlyArray<any>;
 
-export function PayChart() {
-    const data = {
-        labels: ["Revenue", "Income", "Expense"],
-        datasets: [
-            {
-                data: [60, 25, 15],
-                backgroundColor: ["#2563eb", "#22c55e", "#a855f7"],
-                borderWidth: 0,
-            },
-        ],
-    };
-    const options = {
-        cutout: "70%",
-        plugins: {
-            legend: { display: false },
-        },
-    };
-    return (
-        <div className="bg-white rounded-xl shadow p-2 flex flex-col items-center" style={{ maxWidth: 160 }}>
-            <div className="font-semibold mb-1 text-xs">Monthly Transaction</div>
-            <Doughnut data={data} options={options} width={80} height={80} />
-            <div className="flex gap-1 mt-2 text-[10px]">
-                <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[#2563eb]" />
-                    Revenue
-                </span>
-                <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[#22c55e]" />
-                    Income
-                </span>
-                <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-[#a855f7]" />
-                    Expense
-                </span>
-            </div>
-        </div>
-    );
+type Coordinate = {
+  x: number;
+  y: number;
+};
+
+type PieSectorData = {
+  percent?: number;
+  name?: string | number;
+  midAngle?: number;
+  middleRadius?: number;
+  tooltipPosition?: Coordinate;
+  value?: number;
+  paddingAngle?: number;
+  dataKey?: string;
+  payload?: any;
+  tooltipPayload?: ReadonlyArray<TooltipPayload>;
+};
+
+type GeometrySector = {
+  cx: number;
+  cy: number;
+  innerRadius: number;
+  outerRadius: number;
+  startAngle: number;
+  endAngle: number;
+};
+
+type PieLabelProps = PieSectorData &
+  GeometrySector & {
+    tooltipPayload?: any;
+  };
+
+const data = [
+  { name: "Group A", value: 400 },
+  { name: "Group B", value: 300 },
+  { name: "Group C", value: 300 },
+  { name: "Group D", value: 200 },
+];
+
+const RADIAN = Math.PI / 180;
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+}: PieLabelProps) => {
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-(midAngle ?? 0) * RADIAN);
+  const y = cy + radius * Math.sin(-(midAngle ?? 0) * RADIAN);
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+    >
+      {`${((percent ?? 1) * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+function PayChart() {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart width={400} height={400}>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={renderCustomizedLabel}
+          outerRadius={80}
+          fill="#8884d8"
+          dataKey="value"
+        >
+          {data.map((entry, index) => (
+            <Cell
+              key={`cell-${entry.name}`}
+              fill={COLORS[index % COLORS.length]}
+            />
+          ))}
+        </Pie>
+      </PieChart>
+    </ResponsiveContainer>
+  );
 }
+
+export default PayChart;

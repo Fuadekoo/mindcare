@@ -30,8 +30,8 @@ export class CustomError extends CredentialsSignin {
 const authConfig = {
   trustHost: true,
   pages: {
-    signIn: "/signin",
-    signOut: "/signout",
+    signIn: "/en/signin",
+    signOut: "/en/signout",
   },
   callbacks: {
     authorized: async ({ auth, request: { nextUrl } }) => {
@@ -39,7 +39,7 @@ const authConfig = {
         if (nextUrl.pathname.startsWith("/en/signin")) {
           return Response.redirect(new URL("/en/dashboard", nextUrl));
         } else return true;
-      } else if (nextUrl.pathname.startsWith("/en/dashboard")) {
+      } else if (nextUrl.pathname.startsWith("/en")) {
         return false;
       } else return true;
     },
@@ -56,7 +56,7 @@ const authConfig = {
       async authorize(credentials) {
         const { phone, password } = await loginSchema.parseAsync(credentials);
         const user = await prisma.user.findFirst({
-          where: { phone},
+          where: { phone },
           select: { id: true, password: true },
         });
         if (!user) throw new CustomError("Invalid Phone Number");
