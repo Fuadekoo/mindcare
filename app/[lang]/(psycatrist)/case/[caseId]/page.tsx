@@ -2,6 +2,25 @@
 import React, { useState } from "react";
 import { Textarea } from "@heroui/react";
 import { ArrowLeft, X } from "lucide-react";
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2, Plus } from "lucide-react";
+import useAction from "@/hooks/useActions";
+import { addToast } from "@heroui/toast";
+import { useParams } from "next/navigation";
+import {
+  changeCaseStatus,
+  createDiagnosis,
+  deleteDiagnosis,
+  createObservation,
+  deleteObservation,
+  createTreatment,
+  deleteTreatment,
+  getallDiagnosisPerCase,
+  getallObservationPerCase,
+  getallTreatmentPerCase,
+} from "@/actions/psycatrist/case";
 
 function EditableSection({
   title,
@@ -34,6 +53,195 @@ function EditableSection({
       handleSubmit(e as any); // Trigger the form submission logic
     }
   };
+
+  // gate the caseid from the URL parameters
+  const { caseId } = useParams();
+
+  // // --- Data Fetching & Action Hooks ---
+  // const [diagnosisResponse, refreshDiagnosis, isLoadingDiagnosis] = useAction(
+  //   getallDiagnosisPerCase,
+  //   [
+  //     true,
+  //     (response) => {
+  //       if (response) {
+  //         addToast({
+  //           title: "Success",
+  //           description: "New case has been added.",
+  //         });
+  //         refreshDiagnosis();
+  //       } else {
+  //         addToast({
+  //           title: "Error",
+  //           description: "Failed to add case.",
+  //         });
+  //       }
+  //     },
+  //   ],
+  //   caseId as string
+  // );
+  // const [observationResponse, refreshObservation, isLoadingObservation] =
+  //   useAction(
+  //     getallObservationPerCase,
+  //     [
+  //       true,
+  //       (response) => {
+  //         if (response) {
+  //           addToast({
+  //             title: "Success",
+  //             description: "New observation has been added.",
+  //           });
+  //           refreshObservation();
+  //         } else {
+  //           addToast({
+  //             title: "Error",
+  //             description: "Failed to add observation.",
+  //           });
+  //         }
+  //       },
+  //     ],
+  //     caseId as string
+  //   );
+
+  // const [treatmentResponse, refreshTreatment, isLoadingTreatment] = useAction(
+  //   getallTreatmentPerCase,
+  //   [
+  //     true,
+  //     (response) => {
+  //       if (response) {
+  //         addToast({
+  //           title: "Success",
+  //           description: "New treatment has been added.",
+  //         });
+  //         refreshTreatment();
+  //       } else {
+  //         addToast({
+  //           title: "Error",
+  //           description: "Failed to add treatment.",
+  //         });
+  //       }
+  //     },
+  //   ],
+  //   caseId as string
+  // );
+
+  // // create and delete in diagnosis
+  // const [createDiagnosisResponse, createDiagnosisAction, isCreatingDiagnosis] =
+  //   useAction(createDiagnosis, [
+  //     ,
+  //     (response) => {
+  //       if (response) {
+  //         addToast({
+  //           title: "Success",
+  //           description: "Diagnosis created successfully.",
+  //         });
+  //         refreshDiagnosis();
+  //       } else {
+  //         addToast({
+  //           title: "Error",
+  //           description: "Failed to create diagnosis.",
+  //         });
+  //       }
+  //     },
+  //   ]);
+
+  // const [deleteDiagnosisResponse, deleteDiagnosisAction, isDeletingDiagnosis] =
+  //   useAction(deleteDiagnosis, [
+  //     ,
+  //     (response) => {
+  //       if (response) {
+  //         addToast({
+  //           title: "Success",
+  //           description: "Diagnosis deleted successfully.",
+  //         });
+  //         refreshDiagnosis();
+  //       } else {
+  //         addToast({
+  //           title: "Error",
+  //           description: "Failed to delete diagnosis.",
+  //         });
+  //       }
+  //     },
+  //   ]);
+  // // create and delete in observation
+  // const [
+  //   createObservationResponse,
+  //   createObservationAction,
+  //   isCreatingObservation,
+  // ] = useAction(createObservation, [
+  //   ,
+  //   (response) => {
+  //     if (response) {
+  //       addToast({
+  //         title: "Success",
+  //         description: "Observation created successfully.",
+  //       });
+  //       refreshObservation();
+  //     } else {
+  //       addToast({
+  //         title: "Error",
+  //         description: "Failed to create observation.",
+  //       });
+  //     }
+  //   },
+  // ]);
+  // const [
+  //   deleteObservationResponse,
+  //   deleteObservationAction,
+  //   isDeletingObservation,
+  // ] = useAction(deleteObservation, [
+  //   ,
+  //   (response) => {
+  //     if (response) {
+  //       addToast({
+  //         title: "Success",
+  //         description: "Observation deleted successfully.",
+  //       });
+  //       refreshObservation();
+  //     } else {
+  //       addToast({
+  //         title: "Error",
+  //         description: "Failed to delete observation.",
+  //       });
+  //     }
+  //   },
+  // ]);
+  // // create and delete in treatment
+  // const [createTreatmentResponse, createTreatmentAction, isCreatingTreatment] =
+  //   useAction(createTreatment, [
+  //     ,
+  //     (response) => {
+  //       if (response) {
+  //         addToast({
+  //           title: "Success",
+  //           description: "Treatment created successfully.",
+  //         });
+  //         refreshTreatment();
+  //       } else {
+  //         addToast({
+  //           title: "Error",
+  //           description: "Failed to create treatment.",
+  //         });
+  //       }
+  //     },
+  //   ]);
+  // const [deleteTreatmentResponse, deleteTreatmentAction, isDeletingTreatment] =
+  //   useAction(deleteTreatment, [
+  //     ,
+  //     (response) => {
+  //       if (response) {
+  //         addToast({
+  //           title: "Success",
+  //           description: "Treatment deleted successfully.",
+  //         });
+  //         refreshTreatment();
+  //       } else {
+  //         addToast({
+  //           title: "Error",
+  //           description: "Failed to delete treatment.",
+  //         });
+  //       }
+  //     },
+  //   ]);
 
   return (
     <div className="p-4 border-r-1 border-primary-300">
@@ -76,24 +284,153 @@ function Page() {
   const [observations, setObservations] = useState<string[]>([]);
   const [treatments, setTreatments] = useState<string[]>([]);
 
+  // Get caseId from URL params
+  const { caseId } = useParams();
+
+  // Create diagnosis action hook
+  const [createDiagnosisResponse, createDiagnosisAction, isCreatingDiagnosis] =
+    useAction(createDiagnosis, [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Diagnosis created successfully.",
+          });
+          // Optionally refresh diagnoses here if needed
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to create diagnosis.",
+          });
+        }
+      },
+    ]);
+
+  // Delete diagnosis action hook
+  const [deleteDiagnosisResponse, deleteDiagnosisAction, isDeletingDiagnosis] =
+    useAction(deleteDiagnosis, [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Diagnosis deleted successfully.",
+          });
+          // Optionally refresh diagnoses here if needed
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to delete diagnosis.",
+          });
+        }
+      },
+    ]);
+
+  // Create observation action hook
+  const [createObservationResponse, createObservationAction, isCreatingObservation] =
+    useAction(createObservation, [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Observation created successfully.",
+          });
+          // Optionally refresh observations here if needed
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to create observation.",
+          });
+        }
+      },
+    ]);
+
+  // Delete observation action hook
+  const [deleteObservationResponse, deleteObservationAction, isDeletingObservation] =
+    useAction(deleteObservation, [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Observation deleted successfully.",
+          });
+          // Optionally refresh observations here if needed
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to delete observation.",
+          });
+        }
+      },
+    ]);
+
   const handleAddDiagnosis = (item: string) => {
     setDiagnoses([...diagnoses, item]);
+    createDiagnosisAction(caseId as string, item);
   };
   const handleDeleteDiagnosis = (indexToDelete: number) => {
+    deleteDiagnosisAction(diagnoses[indexToDelete]);
     setDiagnoses(diagnoses.filter((_, index) => index !== indexToDelete));
   };
 
   const handleAddObservation = (item: string) => {
     setObservations([...observations, item]);
+    createObservationAction(caseId as string, item);
   };
   const handleDeleteObservation = (indexToDelete: number) => {
+    deleteObservationAction(observations[indexToDelete]);
     setObservations(observations.filter((_, index) => index !== indexToDelete));
   };
 
+  // Create treatment action hook
+  const [createTreatmentResponse, createTreatmentAction, isCreatingTreatment] =
+    useAction(createTreatment, [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Treatment created successfully.",
+          });
+          // Optionally refresh treatments here if needed
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to create treatment.",
+          });
+        }
+      },
+    ]);
+
+  // Delete treatment action hook
+  const [deleteTreatmentResponse, deleteTreatmentAction, isDeletingTreatment] =
+    useAction(deleteTreatment, [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Treatment deleted successfully.",
+          });
+          // Optionally refresh treatments here if needed
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to delete treatment.",
+          });
+        }
+      },
+    ]);
+
   const handleAddTreatment = (item: string) => {
     setTreatments([...treatments, item]);
+    createTreatmentAction(caseId as string, item);
   };
   const handleDeleteTreatment = (indexToDelete: number) => {
+    deleteTreatmentAction(treatments[indexToDelete]);
     setTreatments(treatments.filter((_, index) => index !== indexToDelete));
   };
 
@@ -115,6 +452,7 @@ function Page() {
         <span className="ml-auto text-sm text-primary-400 font-medium">
           Last updated: 2 hours ago
         </span>
+        <span>change the Status</span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="p-4 bg-primary-50 rounded-lg border border-primary-200 shadow-sm flex flex-col gap-2">
