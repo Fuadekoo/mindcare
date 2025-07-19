@@ -131,3 +131,16 @@ export async function deleteAppointment(id: string) {
     return { message: "Failed to delete appointment" };
   }
 }
+
+export async function studentName(id: number) {
+  try {
+    const student = await prisma.student.findUnique({
+      where: { wdt_ID: id },
+      select: { wdt_ID: true, name: true },
+    });
+    return student;
+  } catch (error) {
+    console.error("Error fetching student name:", error);
+    return null;
+  }
+}

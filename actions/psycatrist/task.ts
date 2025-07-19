@@ -28,6 +28,7 @@ export async function getTasks(
       select: {
         id: true,
         note: true,
+        status: true,
         createdAt: true,
       },
       skip: (page - 1) * pageSize,

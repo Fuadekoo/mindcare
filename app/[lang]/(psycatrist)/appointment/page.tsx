@@ -7,55 +7,32 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import useAction from "@/hooks/useActions";
+import {
+  getAppointments,
+  createAppointment,
+  deleteAppointment,
+  updateAppointment,
+  studentName,
+} from "@/actions/psycatrist/appointment";
+import { appointmentSchema } from "@/lib/zodSchema";
 
-// Zod schema for validation
-const appointmentSchema = z.object({
-  studentName: z.string().min(3, "Student name is required."),
-  date: z.string().min(1, "Date is required."),
-  time: z.string().min(1, "Time is required."),
-});
+// const appointmentSchema = z.object({
+//   studentId: z.coerce.number().min(1, "Student ID is required."),
+//   date: z.string().min(1, "Date is required."),
+//   time: z.string().min(1, "Time is required."),
+// });
 
-// Interface for appointment data
 interface Appointment {
-  id: number;
-  studentName: string;
-  date: string;
+  id: string;
+  studentId: number;
+  date: Date;
   time: string;
   status: "Pending" | "Confirmed" | "Cancelled";
   createdAt: string;
 }
 
-// Sample data - will be managed in state
-const sampleAppointments: Appointment[] = [
-  {
-    id: 1,
-    studentName: "John Doe",
-    date: "2024-06-10",
-    time: "09:00",
-    status: "Pending",
-    createdAt: "2024-06-01T10:00:00Z",
-  },
-  {
-    id: 2,
-    studentName: "Alice Johnson",
-    date: "2024-06-11",
-    time: "11:30",
-    status: "Confirmed",
-    createdAt: "2024-06-02T11:30:00Z",
-  },
-  {
-    id: 3,
-    studentName: "Bob Smith",
-    date: "2024-06-12",
-    time: "14:15",
-    status: "Cancelled",
-    createdAt: "2024-06-03T09:15:00Z",
-  },
-];
-
 function Page() {
-  const [appointments, setAppointments] =
-    useState<Appointment[]>(sampleAppointments);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Appointment | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -63,6 +40,28 @@ function Page() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
+
+  // Fetch appointments from backend
+  const [appointments, refreshAppointments, isLoadingAppointments] = useAction(
+    getAppointments,
+    [true, () => {}],
+    search,
+    page,
+    pageSize
+  );
+
+  const [, createAction, isCreatingAppointment] = useAction(createAppointment, [
+    ,
+    () => {},
+  ]);
+  const [, deleteAction, isDeletingAppointment] = useAction(deleteAppointment, [
+    ,
+    () => {},
+  ]);
+  const [, updateAction, isUpdatingAppointment] = useAction(updateAppointment, [
+    ,
+    () => {},
+  ]);
 
   const {
     handleSubmit,
@@ -76,75 +75,83 @@ function Page() {
 
   const handleAdd = () => {
     setEditItem(null);
-    reset({ studentName: "", date: "", time: "" });
+    reset({ studentId: 0, date: "", time: "" });
     setShowModal(true);
   };
 
   const handleEdit = (item: Appointment) => {
     setEditItem(item);
-    setValue("studentName", item.studentName);
-    setValue("date", item.date);
+    setValue("studentId", item.studentId);
+    setValue("date", item.date.toISOString().split("T")[0]);
     setValue("time", item.time);
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this appointment?")) {
-      setAppointments(appointments.filter((app) => app.id !== id));
+      setIsLoading(true);
+      await deleteAction(id);
       addToast({ title: "Success", description: "Appointment deleted." });
+      setIsLoading(false);
+      refreshAppointments();
     }
   };
 
-  const onSubmit = (data: z.infer<typeof appointmentSchema>) => {
+  const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
     setIsLoading(true);
-    setTimeout(() => {
-      // Simulate API call
-      if (editItem) {
-        // Update existing appointment
-        setAppointments(
-          appointments.map((app) =>
-            app.id === editItem.id ? { ...app, ...data } : app
-          )
-        );
-        addToast({ title: "Success", description: "Appointment updated." });
-      } else {
-        // Add new appointment
-        const newAppointment: Appointment = {
-          id: Date.now(),
-          ...data,
-          status: "Pending",
-          createdAt: new Date().toISOString(),
-        };
-        setAppointments([...appointments, newAppointment]);
-        addToast({ title: "Success", description: "Appointment created." });
-      }
-      setIsLoading(false);
-      setShowModal(false);
-      reset();
-    }, 1000);
+    if (editItem) {
+      await updateAction(editItem.id, {
+        studentId: data.studentId,
+        date: new Date(data.date),
+        time: data.time,
+      });
+      addToast({ title: "Success", description: "Appointment updated." });
+    } else {
+      await createAction({
+        studentId: data.studentId,
+        date: new Date(data.date),
+        time: data.time,
+      });
+      addToast({ title: "Success", description: "Appointment created." });
+    }
+    setIsLoading(false);
+    setShowModal(false);
+    reset();
+    refreshAppointments();
   };
-
-  const filteredRows = useMemo(
-    () =>
-      appointments.filter((appointment) =>
-        appointment.studentName.toLowerCase().includes(search.toLowerCase())
-      ),
-    [appointments, search]
-  );
-
-  const paginatedRows = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredRows.slice(start, start + pageSize);
-  }, [filteredRows, page, pageSize]);
-
+  const filteredRows =
+    appointments && Array.isArray(appointments.data)
+      ? appointments.data.filter((appointment) =>
+          appointment.id.toString().toLowerCase().includes(search.toLowerCase())
+        )
+      : [];
   const columns: ColumnDef<Appointment>[] = [
-    { key: "studentName", label: "Student Name" },
+    {
+      key: "autoId",
+      label: "#",
+      renderCell: (item) => {
+        const rowIndexOnPage = filteredRows.findIndex((r) => r.id === item.id);
+        if (rowIndexOnPage !== -1) {
+          return (page - 1) * pageSize + rowIndexOnPage + 1;
+        }
+        return item.id?.toString().slice(0, 5) + "...";
+      },
+    },
+    {
+      key: "studentId",
+      label: "Student ID",
+      renderCell: (item) => item.studentId,
+    },
     {
       key: "date",
       label: "Date",
       renderCell: (item) => new Date(item.date).toLocaleDateString(),
     },
-    { key: "time", label: "Time" },
+    {
+      key: "time",
+      label: "Time",
+      renderCell: (item) => item.time,
+    },
     {
       key: "status",
       label: "Status",
@@ -166,23 +173,29 @@ function Page() {
       },
     },
     {
+      key: "createdAt",
+      label: "Created At",
+      renderCell: (item) => new Date(item.createdAt).toLocaleDateString(),
+    },
+    {
       key: "actions",
       label: "Actions",
       renderCell: (item) => (
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            variant="flat"
             color="primary"
+            variant="flat"
             onPress={() => handleEdit(item)}
           >
             Edit
           </Button>
           <Button
             size="sm"
-            variant="flat"
             color="danger"
+            variant="flat"
             onPress={() => handleDelete(item.id)}
+            isLoading={isLoading && isDeletingAppointment}
           >
             <Trash2 size={16} />
           </Button>
@@ -190,6 +203,12 @@ function Page() {
       ),
     },
   ];
+
+  // Pagination logic for table rows
+  const paginatedRows = filteredRows.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
 
   return (
     <div className="p-4 sm:p-6">
@@ -210,7 +229,7 @@ function Page() {
         onPageSizeChange={setPageSize}
         searchValue={search}
         onSearch={setSearch}
-        isLoading={false}
+        isLoading={isLoadingAppointments}
       />
 
       {/* Modal for Add/Edit */}
@@ -225,13 +244,14 @@ function Page() {
                 <div>
                   <input
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="Student Name"
-                    {...register("studentName")}
+                    placeholder="Student ID"
+                    type="number"
+                    {...register("studentId")}
                     disabled={isLoading}
                   />
-                  {errors.studentName && (
+                  {errors.studentId && (
                     <span className="text-red-500 text-xs mt-1">
-                      {errors.studentName.message}
+                      {errors.studentId.message}
                     </span>
                   )}
                 </div>

@@ -2,25 +2,8 @@
 import CustomTable from "@/components/custom-table";
 import React from "react";
 import { Plus, Check, X, Trash2, Search } from "lucide-react";
-
-// Sample data for students
-const sampleStudents = [
-  {
-    id: 1,
-    cname: "John Doe",
-    createdAt: "2024-06-01T10:00:00Z",
-  },
-  {
-    id: 2,
-    cname: "Jane Smith",
-    createdAt: "2024-06-02T11:30:00Z",
-  },
-  {
-    id: 3,
-    cname: "Alice Johnson",
-    createdAt: "2024-06-03T09:15:00Z",
-  },
-];
+import useAction from "@/hooks/useActions";
+import { getStudents } from "@/actions/psycatrist/students";
 
 type ColumnDef = {
   key: string;
@@ -33,21 +16,31 @@ function Page() {
   const [pageSize, setPageSize] = React.useState(10);
   const [search, setSearch] = React.useState("");
   const [isLoadingDelete, setIsLoadingDelete] = React.useState(false);
-
-  // Filtered rows based on search
-  const filteredRows = sampleStudents.filter((student) =>
-    student.cname.toLowerCase().includes(search.toLowerCase())
+  const [studentsData, fetchStudents, isLoading] = useAction(
+    getStudents,
+    [true, () => {}],
+    search,
+    page,
+    pageSize
   );
 
-  const rows = filteredRows.map((student) => ({
+  // Filtered rows based on search
+  const filteredRows =
+    studentsData && Array.isArray(studentsData.data)
+      ? studentsData.data.filter((student) =>
+          (student.name ?? "").toLowerCase().includes(search.toLowerCase())
+        )
+      : [];
+
+  const rows = filteredRows.map((student: Record<string, any>) => ({
     ...Object.fromEntries(
       Object.entries(student).map(([k, v]) => [
         k,
         v === undefined || v === null ? "" : v.toString(),
       ])
     ),
-    key: student.id?.toString(),
-    id: student.id?.toString(),
+    key: student.wdt_ID?.toString(),
+    id: student.wdt_ID?.toString(),
   }));
 
   const columns: ColumnDef[] = [
@@ -63,43 +56,70 @@ function Page() {
       },
     },
     {
-      key: "cname",
+      key: "name",
       label: "Student Name",
-      renderCell: (item) => item.cname,
+      renderCell: (item) => item.name,
+    },
+    {
+      key: "wdt_ID",
+      label: "ID",
+      renderCell: (item) => item.wdt_ID,
+    },
+    {
+      key: "passcode",
+      label: "Passcode",
+      renderCell: (item) => item.passcode,
+    },
+    {
+      key: "phoneno",
+      label: "Phone No",
+      renderCell: (item) => item.phoneno,
+    },
+    {
+      key: "country",
+      label: "Country",
+      renderCell: (item) => item.country,
+    },
+    {
+      key: "status",
+      label: "Status",
+      renderCell: (item) => item.status,
+    },
+    {
+      key: "isKid",
+      label: "Is Kid",
+      renderCell: (item) => item.isKid ? "Yes" : "No",
+    },
+    {
+      key: "ustaz",
+      label: "Ustaz",
+      renderCell: (item) => item.ustaz,
+    },
+    {
+      key: "subject",
+      label: "Subject",
+      renderCell: (item) => item.subject,
+    },
+    {
+      key: "package",
+      label: "Package",
+      renderCell: (item) => item.package,
+    },
+    {
+      key: "chat_id",
+      label: "Chat ID",
+      renderCell: (item) => item.chat_id,
+    },
+    {
+      key: "u_control",
+      label: "U Control",
+      renderCell: (item) => item.u_control,
     },
     {
       key: "createdAt",
       label: "Created At",
       renderCell: (item) =>
         item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "N/A",
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      renderCell: (item) => (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="px-2 py-1 bg-blue-500 text-white rounded"
-            onClick={() => alert(`Edit student ${item.cname}`)}
-            disabled={isLoadingDelete}
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            className="px-2 py-1 bg-red-500 text-white rounded"
-            onClick={() => {
-              setIsLoadingDelete(true);
-              setTimeout(() => setIsLoadingDelete(false), 1000);
-              alert(`Delete student ${item.cname}`);
-            }}
-            disabled={isLoadingDelete}
-          >
-            {isLoadingDelete ? "Deleting..." : <Trash2 size={16} />}
-          </button>
-        </div>
-      ),
     },
   ];
 
