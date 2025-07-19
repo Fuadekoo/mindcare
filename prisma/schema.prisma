@@ -55,6 +55,7 @@ model history {
   studentId       Int
   historyCode     String        @unique @default(cuid())
   patientTypeData String
+  note            String?
   solved          Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

@@ -64,3 +64,15 @@ export async function getStudents(
     return { message: "Failed to fetch students" };
   }
 }
+
+export async function studentData() {
+  try {
+    const student = await prisma.student.findMany({
+      select: { wdt_ID: true, name: true },
+    });
+    return student;
+  } catch (error) {
+    console.error("Error fetching student name:", error);
+    return null;
+  }
+}
