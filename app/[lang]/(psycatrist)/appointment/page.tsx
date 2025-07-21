@@ -4,26 +4,25 @@ import CustomTable, { ColumnDef } from "@/components/custom-table";
 import { Button } from "@heroui/react";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 import useAction from "@/hooks/useActions";
+import { getStudents } from "@/actions/psycatrist/students";
 import {
   changeAppointmentStatus,
   getAppointments,
   createAppointment,
   deleteAppointment,
   updateAppointment,
-  studentName,
 } from "@/actions/psycatrist/appointment";
 import { appointmentSchema } from "@/lib/zodSchema";
 
-// const appointmentSchema = z.object({
-//   studentId: z.coerce.number().min(1, "Student ID is required."),
-//   date: z.string().min(1, "Date is required."),
-//   time: z.string().min(1, "Time is required."),
-// });
+interface StudentOption {
+  value: number;
+  label: string;
+}
 
 interface Appointment {
   id: string;
@@ -41,124 +40,166 @@ interface Appointment {
 function Page() {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Appointment | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
 
-  // Fetch appointments from backend
-  const [appointments, refreshAppointments, isLoadingAppointments] = useAction(
-    getAppointments,
-    [true, () => {}],
-    search,
-    page,
-    pageSize
-  );
-  const [, changeStatusAction, isChangingStatus] = useAction(
-    changeAppointmentStatus,
-    [, () => {}]
-  );
+  // --- Data Fetching ---
+  const [appointmentsResponse, refreshAppointments, isLoadingAppointments] =
+    useAction(getAppointments, [true, () => {}], search, page, pageSize);
+
+  const [studentsResponse, , isLoadingStudents] = useAction(getStudents, [
+    true,
+    () => {},
+  ]);
+
+  // --- Form Handling ---
+  const {
+    handleSubmit,
+    control,
+    reset,
+    setValue,
+    register, // Added register here
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof appointmentSchema>>({
+    resolver: zodResolver(appointmentSchema) as any,
+    defaultValues: {
+      studentId: undefined,
+      date: "",
+      time: "",
+    },
+  });
+
+  // --- Actions ---
+  const handleActionCompletion = (
+    response: any,
+    successMessage: string,
+    errorMessage: string
+  ) => {
+    if (response && !response.error) {
+      addToast({ title: "Success", description: successMessage });
+      refreshAppointments();
+      if (showModal) {
+        setShowModal(false);
+        reset();
+      }
+    } else {
+      addToast({
+        title: "Error",
+        description: response?.error || errorMessage,
+      });
+    }
+  };
 
   const [, createAction, isCreatingAppointment] = useAction(createAppointment, [
     ,
-    () => {},
+    (res) =>
+      handleActionCompletion(
+        res,
+        "Appointment created successfully.",
+        "Failed to create appointment."
+      ),
   ]);
-  const [, deleteAction, isDeletingAppointment] = useAction(deleteAppointment, [
-    ,
-    () => {},
-  ]);
+
   const [, updateAction, isUpdatingAppointment] = useAction(updateAppointment, [
     ,
-    () => {},
+    (res) =>
+      handleActionCompletion(
+        res,
+        "Appointment updated successfully.",
+        "Failed to update appointment."
+      ),
   ]);
 
-  const {
-    handleSubmit,
-    register,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<z.infer<typeof appointmentSchema>>({
-    resolver: zodResolver(appointmentSchema) as any,
-  });
+  const [, deleteAction, isDeletingAppointment] = useAction(deleteAppointment, [
+    ,
+    (res) =>
+      handleActionCompletion(
+        res,
+        "Appointment deleted successfully.",
+        "Failed to delete appointment."
+      ),
+  ]);
 
+  const [, changeStatusAction, isChangingStatus] = useAction(
+    changeAppointmentStatus,
+    [
+      ,
+      (res) =>
+        handleActionCompletion(
+          res,
+          "Status updated successfully.",
+          "Failed to update status."
+        ),
+    ]
+  );
+
+  // Memoize student options for react-select
+  const studentOptions = useMemo<StudentOption[]>(() => {
+    if (!studentsResponse?.data) return [];
+    return studentsResponse.data.map(
+      (student: { wdt_ID: number; name: string | null }) => ({
+        value: student.wdt_ID,
+        label: `${student.wdt_ID} - ${student.name ?? ""}`,
+      })
+    );
+  }, [studentsResponse]);
+
+  // --- Event Handlers ---
   const handleAdd = () => {
     setEditItem(null);
-    reset({ studentId: 0, date: "", time: "" });
+    reset();
     setShowModal(true);
   };
 
   const handleEdit = (item: Appointment) => {
     setEditItem(item);
     setValue("studentId", item.student.wdt_ID);
-    setValue("date", item.date.toISOString().split("T")[0]);
+    setValue("date", new Date(item.date).toISOString().split("T")[0]);
     setValue("time", item.time);
     setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this appointment?")) {
-      setIsLoading(true);
       await deleteAction(id);
-      addToast({ title: "Success", description: "Appointment deleted." });
-      setIsLoading(false);
-      refreshAppointments();
     }
   };
 
   const handleChangeStatus = async (id: string) => {
     if (
-      !window.confirm(
+      window.confirm(
         "Are you sure you want to change the status of this appointment?"
       )
     ) {
-      return;
+      await changeStatusAction(id);
     }
-    setIsLoading(true);
-    await changeStatusAction(id);
-    setIsLoading(false);
-    refreshAppointments();
   };
 
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
-    setIsLoading(true);
+    const payload = {
+      ...data,
+      date: new Date(data.date),
+    };
     if (editItem) {
-      await updateAction(editItem.id, {
-        studentId: data.studentId,
-        date: new Date(data.date),
-        time: data.time,
-      });
-      addToast({ title: "Success", description: "Appointment updated." });
+      await updateAction(editItem.id, payload);
     } else {
-      await createAction({
-        studentId: data.studentId,
-        date: new Date(data.date),
-        time: data.time,
-      });
-      addToast({ title: "Success", description: "Appointment created." });
+      await createAction(payload);
     }
-    setIsLoading(false);
-    setShowModal(false);
-    reset();
-    refreshAppointments();
   };
-  const filteredRows =
-    appointments && Array.isArray(appointments.data)
-      ? appointments.data.filter((appointment) =>
-          appointment.id.toString().toLowerCase().includes(search.toLowerCase())
-        )
-      : [];
+
+  const isLoading =
+    isCreatingAppointment || isUpdatingAppointment || isSubmitting;
+
+  // --- Table Columns Definition ---
   const columns: ColumnDef<Appointment>[] = [
     {
       key: "autoId",
       label: "#",
-      renderCell: (item) => {
-        const rowIndexOnPage = filteredRows.findIndex((r) => r.id === item.id);
-        if (rowIndexOnPage !== -1) {
-          return (page - 1) * pageSize + rowIndexOnPage + 1;
-        }
-        return item.id?.toString().slice(0, 5) + "...";
+      renderCell: (item, index) => {
+        const calculatedIndex = (page - 1) * pageSize + index + 1;
+        return isNaN(calculatedIndex) ? "" : calculatedIndex;
       },
     },
     {
@@ -178,7 +219,6 @@ function Page() {
     {
       key: "time",
       label: "Time",
-      renderCell: (item) => item.time,
     },
     {
       key: "status",
@@ -214,7 +254,7 @@ function Page() {
           color="primary"
           variant="flat"
           onPress={() => handleChangeStatus(item.id)}
-          isLoading={isLoading && isChangingStatus}
+          isLoading={isChangingStatus}
         >
           Confirm
         </Button>
@@ -238,7 +278,7 @@ function Page() {
             color="danger"
             variant="flat"
             onPress={() => handleDelete(item.id)}
-            isLoading={isLoading && isDeletingAppointment}
+            isLoading={isDeletingAppointment}
           >
             <Trash2 size={16} />
           </Button>
@@ -246,12 +286,6 @@ function Page() {
       ),
     },
   ];
-
-  // Pagination logic for table rows
-  const paginatedRows = filteredRows.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
 
   return (
     <div className="p-4 sm:p-6">
@@ -264,8 +298,8 @@ function Page() {
       </div>
       <CustomTable
         columns={columns}
-        rows={paginatedRows}
-        totalRows={filteredRows.length}
+        rows={appointmentsResponse?.data || []}
+        totalRows={appointmentsResponse?.meta?.total || 0}
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
@@ -285,12 +319,54 @@ function Page() {
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="flex flex-col gap-4">
                 <div>
-                  <input
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="Student ID"
-                    type="number"
-                    {...register("studentId")}
-                    disabled={isLoading}
+                  <Controller
+                    name="studentId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        options={studentOptions}
+                        placeholder="Search and select a student..."
+                        isClearable
+                        isSearchable
+                        isLoading={isLoadingStudents}
+                        isDisabled={isLoading}
+                        onChange={(option) =>
+                          field.onChange(option ? option.value : undefined)
+                        }
+                        value={
+                          studentOptions.find((c) => c.value === field.value) ||
+                          null
+                        }
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            borderRadius: "0.5rem",
+                            borderColor: errors.studentId
+                              ? "#ef4444"
+                              : "#d1d5db",
+                            "&:hover": {
+                              borderColor: errors.studentId
+                                ? "#ef4444"
+                                : "#8b5cf6",
+                            },
+                            boxShadow: errors.studentId
+                              ? "0 0 0 1px #ef4444"
+                              : "none",
+                            minHeight: "42px",
+                          }),
+                          option: (base, state) => ({
+                            ...base,
+                            backgroundColor: state.isSelected
+                              ? "#8b5cf6"
+                              : state.isFocused
+                              ? "#f5f3ff"
+                              : "white",
+                            color: state.isSelected ? "white" : "#374151",
+                          }),
+                        }}
+                      />
+                    )}
                   />
                   {errors.studentId && (
                     <span className="text-red-500 text-xs mt-1">
@@ -301,7 +377,7 @@ function Page() {
                 <div>
                   <input
                     type="date"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
                     {...register("date")}
                     disabled={isLoading}
                   />
@@ -314,7 +390,7 @@ function Page() {
                 <div>
                   <input
                     type="time"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
                     {...register("time")}
                     disabled={isLoading}
                   />
