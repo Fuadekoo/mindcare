@@ -2,6 +2,7 @@
 import prisma from "@/lib/db";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { select } from "@heroui/react";
 export async function getCaseCard(
   search?: string,
   page?: number,
@@ -228,3 +229,37 @@ export async function patientTypeData() {
     return [];
   }
 }
+
+export async function caseDetails(caseId: string) {
+  try {
+    const details = await prisma.history.findUnique({
+      where: { id: caseId },
+      select: {
+        student: { select: { wdt_ID: true, name: true } },
+        historyCode: true,
+        patientData: { select: { type: true } },
+        note: true,
+        solved: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+    return details;
+  } catch (error) {
+    console.error("Error fetching case details:", error);
+    return null;
+  }
+}
+
+// export async function changeCaseStatus(caseId: string, solved: boolean) {
+//   try {
+//     const updatedCase = await prisma.history.update({
+//       where: { id: caseId },
+//       data: { solved },
+//     });
+//     return { message: "Case status updated successfully" };
+//   } catch (error) {
+//     console.error("Error updating case status:", error);
+//     return { message: "Failed to update case status" };
+//   }
+// }

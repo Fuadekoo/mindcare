@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { Textarea } from "@heroui/react";
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X, ToggleLeft, ToggleRight, Check } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import useAction from "@/hooks/useActions";
 import { addToast } from "@heroui/toast";
 import { useParams } from "next/navigation";
 import {
+  caseDetails,
   changeCaseStatus,
   createDiagnosis,
   deleteDiagnosis,
@@ -114,6 +115,39 @@ function Page() {
   const { caseId } = useParams();
 
   // --- Data Fetching & Action Hooks ---
+
+  const [caseDetailsResponse, refreshCaseDetails, isLoadingCaseDetails] =
+    useAction(
+      caseDetails,
+      [
+        true,
+        (response) => {
+          if (!response) {
+            addToast({
+              title: "Error",
+              description: "Failed to load case details.",
+            });
+          }
+        },
+      ],
+      caseId as string
+    );
+
+  const [statusResponse, actionStatus, isLoadingStatus] = useAction(
+    changeCaseStatus,
+    [
+      ,
+      (response) => {
+        if (!response) {
+          addToast({
+            title: "Error",
+            description: "Failed to load case details.",
+          });
+        }
+      },
+    ]
+  );
+
   const [diagnosisResponse, refreshDiagnosis, isLoadingDiagnosis] = useAction(
     getallDiagnosisPerCase,
     [
@@ -331,27 +365,84 @@ function Page() {
           Case Details
         </h1>
         <span className="ml-auto text-sm text-primary-400 font-medium">
-          Last updated: 2 hours ago
+          last updated:{" "}
+          {caseDetailsResponse?.updatedAt
+            ? new Date(caseDetailsResponse.updatedAt).toLocaleString()
+            : ""}
         </span>
-        <span>change the Status</span>
+        <span>
+          {caseDetailsResponse?.solved ? (
+            <>
+              <Check className="text-green-600 inline-block mr-2" />
+              <ToggleRight className="text-green-600 inline-block mr-2" />
+              <button
+                type="button"
+                className="text-primary-400 hover:text-red-600"
+                onClick={() => actionStatus(caseId as string, true)}
+                aria-label="Mark as unsolved"
+              >
+                Mark as Unsolved
+              </button>
+            </>
+          ) : (
+            <>
+              <X className="text-red-600 inline-block mr-2" />
+              <ToggleLeft className="text-yellow-600 inline-block mr-2" />
+              <button
+                type="button"
+                className="text-primary-400 hover:text-green-600"
+                onClick={() => actionStatus(caseId as string, true)}
+                aria-label="Mark as solved"
+              >
+                Mark as Solved
+              </button>
+            </>
+          )}
+        </span>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="p-4 bg-primary-50 rounded-lg border border-primary-200 shadow-sm flex flex-col gap-2">
-          <div className="font-semibold text-primary-800">
-            Student Name:{" "}
-            <span className="font-normal text-primary-900">
-              Fuad Abdurahman
-            </span>
-          </div>
-          <div className="font-semibold text-primary-800">
-            Type:{" "}
-            <span className="font-normal text-primary-900">
-              Psychiatric Evaluation
-            </span>
-          </div>
-          <div className="font-semibold text-primary-800">
-            Status: <span className="font-normal text-green-600">Solved</span>
-          </div>
+          {isLoadingCaseDetails ? (
+            <div className="flex items-center justify-center h-24">
+              <Loader2 className="animate-spin text-primary-500" />
+            </div>
+          ) : caseDetailsResponse ? (
+            <>
+              <div className="font-semibold text-primary-800">
+                Student Name:{" "}
+                <span className="font-normal text-primary-900">
+                  {caseDetailsResponse.student.name}
+                </span>
+              </div>
+              <div className="font-semibold text-primary-800">
+                Type:{" "}
+                <span className="font-normal text-primary-900">
+                  {caseDetailsResponse.patientData.type || "N/A"}
+                </span>
+              </div>
+              <div className="font-semibold text-primary-800">
+                Status:{" "}
+                <span
+                  className={`font-normal ${
+                    caseDetailsResponse.solved
+                      ? "text-green-600"
+                      : "text-yellow-600"
+                  }`}
+                >
+                  {caseDetailsResponse.solved ? "Yes" : "No"}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="mt-2 text-sm text-secondary-600 underline"
+                onClick={refreshCaseDetails}
+              >
+                Refresh
+              </button>
+            </>
+          ) : (
+            <div className="text-red-600">Failed to load case details.</div>
+          )}
         </div>
       </div>
       <div className="bg-white/100 shadow-secondary-400 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
