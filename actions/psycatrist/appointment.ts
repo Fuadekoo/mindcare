@@ -28,6 +28,7 @@ export async function getAppointments(
         id: true,
         student: {
           select: {
+            wdt_ID: true,
             name: true,
           },
         },

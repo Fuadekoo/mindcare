@@ -25,7 +25,11 @@ import { appointmentSchema } from "@/lib/zodSchema";
 
 interface Appointment {
   id: string;
-  studentId: number;
+  wdt_ID: number;
+  student: {
+    wdt_ID: number;
+    name: string;
+  };
   date: Date;
   time: string;
   status: "Pending" | "Confirmed" | "Cancelled";
@@ -70,7 +74,7 @@ function Page() {
     setValue,
     formState: { errors },
   } = useForm<z.infer<typeof appointmentSchema>>({
-    resolver: zodResolver(appointmentSchema),
+    resolver: zodResolver(appointmentSchema) as any,
   });
 
   const handleAdd = () => {
@@ -81,7 +85,7 @@ function Page() {
 
   const handleEdit = (item: Appointment) => {
     setEditItem(item);
-    setValue("studentId", item.studentId);
+    setValue("studentId", item.student.wdt_ID);
     setValue("date", item.date.toISOString().split("T")[0]);
     setValue("time", item.time);
     setShowModal(true);
@@ -135,27 +139,31 @@ function Page() {
           return (page - 1) * pageSize + rowIndexOnPage + 1;
         }
         return item.id?.toString().slice(0, 5) + "...";
-      },
-    },
-    {
-      key: "studentId",
-      label: "Student ID",
-      renderCell: (item) => item.studentId,
-    },
-    {
-      key: "date",
-      label: "Date",
-      renderCell: (item) => new Date(item.date).toLocaleDateString(),
-    },
-    {
-      key: "time",
-      label: "Time",
-      renderCell: (item) => item.time,
-    },
-    {
-      key: "status",
-      label: "Status",
-      renderCell: (item) => {
+            },
+          },
+          {
+            key: "student",
+            label: "Student",
+            renderCell: (item) => (
+        <span>
+          {item.student.wdt_ID} - {item.student.name}
+        </span>
+            ),
+          },
+          {
+            key: "date",
+            label: "Date",
+            renderCell: (item) => new Date(item.date).toLocaleDateString(),
+          },
+          {
+            key: "time",
+            label: "Time",
+            renderCell: (item) => item.time,
+          },
+          {
+            key: "status",
+            label: "Status",
+            renderCell: (item) => {
         const statusStyles = {
           Confirmed: "bg-green-100 text-green-800",
           Pending: "bg-yellow-100 text-yellow-800",
