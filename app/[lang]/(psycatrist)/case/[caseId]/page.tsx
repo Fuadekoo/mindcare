@@ -57,192 +57,6 @@ function EditableSection({
   // gate the caseid from the URL parameters
   const { caseId } = useParams();
 
-  // // --- Data Fetching & Action Hooks ---
-  // const [diagnosisResponse, refreshDiagnosis, isLoadingDiagnosis] = useAction(
-  //   getallDiagnosisPerCase,
-  //   [
-  //     true,
-  //     (response) => {
-  //       if (response) {
-  //         addToast({
-  //           title: "Success",
-  //           description: "New case has been added.",
-  //         });
-  //         refreshDiagnosis();
-  //       } else {
-  //         addToast({
-  //           title: "Error",
-  //           description: "Failed to add case.",
-  //         });
-  //       }
-  //     },
-  //   ],
-  //   caseId as string
-  // );
-  // const [observationResponse, refreshObservation, isLoadingObservation] =
-  //   useAction(
-  //     getallObservationPerCase,
-  //     [
-  //       true,
-  //       (response) => {
-  //         if (response) {
-  //           addToast({
-  //             title: "Success",
-  //             description: "New observation has been added.",
-  //           });
-  //           refreshObservation();
-  //         } else {
-  //           addToast({
-  //             title: "Error",
-  //             description: "Failed to add observation.",
-  //           });
-  //         }
-  //       },
-  //     ],
-  //     caseId as string
-  //   );
-
-  // const [treatmentResponse, refreshTreatment, isLoadingTreatment] = useAction(
-  //   getallTreatmentPerCase,
-  //   [
-  //     true,
-  //     (response) => {
-  //       if (response) {
-  //         addToast({
-  //           title: "Success",
-  //           description: "New treatment has been added.",
-  //         });
-  //         refreshTreatment();
-  //       } else {
-  //         addToast({
-  //           title: "Error",
-  //           description: "Failed to add treatment.",
-  //         });
-  //       }
-  //     },
-  //   ],
-  //   caseId as string
-  // );
-
-  // // create and delete in diagnosis
-  // const [createDiagnosisResponse, createDiagnosisAction, isCreatingDiagnosis] =
-  //   useAction(createDiagnosis, [
-  //     ,
-  //     (response) => {
-  //       if (response) {
-  //         addToast({
-  //           title: "Success",
-  //           description: "Diagnosis created successfully.",
-  //         });
-  //         refreshDiagnosis();
-  //       } else {
-  //         addToast({
-  //           title: "Error",
-  //           description: "Failed to create diagnosis.",
-  //         });
-  //       }
-  //     },
-  //   ]);
-
-  // const [deleteDiagnosisResponse, deleteDiagnosisAction, isDeletingDiagnosis] =
-  //   useAction(deleteDiagnosis, [
-  //     ,
-  //     (response) => {
-  //       if (response) {
-  //         addToast({
-  //           title: "Success",
-  //           description: "Diagnosis deleted successfully.",
-  //         });
-  //         refreshDiagnosis();
-  //       } else {
-  //         addToast({
-  //           title: "Error",
-  //           description: "Failed to delete diagnosis.",
-  //         });
-  //       }
-  //     },
-  //   ]);
-  // // create and delete in observation
-  // const [
-  //   createObservationResponse,
-  //   createObservationAction,
-  //   isCreatingObservation,
-  // ] = useAction(createObservation, [
-  //   ,
-  //   (response) => {
-  //     if (response) {
-  //       addToast({
-  //         title: "Success",
-  //         description: "Observation created successfully.",
-  //       });
-  //       refreshObservation();
-  //     } else {
-  //       addToast({
-  //         title: "Error",
-  //         description: "Failed to create observation.",
-  //       });
-  //     }
-  //   },
-  // ]);
-  // const [
-  //   deleteObservationResponse,
-  //   deleteObservationAction,
-  //   isDeletingObservation,
-  // ] = useAction(deleteObservation, [
-  //   ,
-  //   (response) => {
-  //     if (response) {
-  //       addToast({
-  //         title: "Success",
-  //         description: "Observation deleted successfully.",
-  //       });
-  //       refreshObservation();
-  //     } else {
-  //       addToast({
-  //         title: "Error",
-  //         description: "Failed to delete observation.",
-  //       });
-  //     }
-  //   },
-  // ]);
-  // // create and delete in treatment
-  // const [createTreatmentResponse, createTreatmentAction, isCreatingTreatment] =
-  //   useAction(createTreatment, [
-  //     ,
-  //     (response) => {
-  //       if (response) {
-  //         addToast({
-  //           title: "Success",
-  //           description: "Treatment created successfully.",
-  //         });
-  //         refreshTreatment();
-  //       } else {
-  //         addToast({
-  //           title: "Error",
-  //           description: "Failed to create treatment.",
-  //         });
-  //       }
-  //     },
-  //   ]);
-  // const [deleteTreatmentResponse, deleteTreatmentAction, isDeletingTreatment] =
-  //   useAction(deleteTreatment, [
-  //     ,
-  //     (response) => {
-  //       if (response) {
-  //         addToast({
-  //           title: "Success",
-  //           description: "Treatment deleted successfully.",
-  //         });
-  //         refreshTreatment();
-  //       } else {
-  //         addToast({
-  //           title: "Error",
-  //           description: "Failed to delete treatment.",
-  //         });
-  //       }
-  //     },
-  //   ]);
-
   return (
     <div className="p-4 border-r-1 border-primary-300">
       <h1 className="text-xl font-bold capitalize text-primary-700 mb-3 underline">
@@ -287,6 +101,86 @@ function Page() {
   // Get caseId from URL params
   const { caseId } = useParams();
 
+  // --- Data Fetching & Action Hooks ---
+  const [diagnosisResponse, refreshDiagnosis, isLoadingDiagnosis] = useAction(
+    getallDiagnosisPerCase,
+    [
+      true,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "New case has been added.",
+          });
+          refreshDiagnosis();
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to add case.",
+          });
+        }
+      },
+    ],
+    caseId as string
+  );
+  const [observationResponse, refreshObservation, isLoadingObservation] =
+    useAction(
+      getallObservationPerCase,
+      [
+        true,
+        (response) => {
+          if (response) {
+            addToast({
+              title: "Success",
+              description: "New observation has been added.",
+            });
+            refreshObservation();
+          } else {
+            addToast({
+              title: "Error",
+              description: "Failed to add observation.",
+            });
+          }
+        },
+      ],
+      caseId as string
+    );
+
+  const [treatmentResponse, refreshTreatment, isLoadingTreatment] = useAction(
+    getallTreatmentPerCase,
+    [
+      true,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "New treatment has been added.",
+          });
+          refreshTreatment();
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to add treatment.",
+          });
+        }
+      },
+    ],
+    caseId as string
+  );
+
+  // Helper functions to extract the data we need from responses
+  const getDiagnoses = () => {
+    return diagnosisResponse?.map((item: any) => item.diagnosis) || [];
+  };
+
+  const getObservations = () => {
+    return observationResponse?.map((item: any) => item.observation) || [];
+  };
+
+  const getTreatments = () => {
+    return treatmentResponse?.map((item: any) => item.treatment) || [];
+  };
+
   // Create diagnosis action hook
   const [createDiagnosisResponse, createDiagnosisAction, isCreatingDiagnosis] =
     useAction(createDiagnosis, [
@@ -328,44 +222,50 @@ function Page() {
     ]);
 
   // Create observation action hook
-  const [createObservationResponse, createObservationAction, isCreatingObservation] =
-    useAction(createObservation, [
-      ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Observation created successfully.",
-          });
-          // Optionally refresh observations here if needed
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to create observation.",
-          });
-        }
-      },
-    ]);
+  const [
+    createObservationResponse,
+    createObservationAction,
+    isCreatingObservation,
+  ] = useAction(createObservation, [
+    ,
+    (response) => {
+      if (response) {
+        addToast({
+          title: "Success",
+          description: "Observation created successfully.",
+        });
+        // Optionally refresh observations here if needed
+      } else {
+        addToast({
+          title: "Error",
+          description: "Failed to create observation.",
+        });
+      }
+    },
+  ]);
 
   // Delete observation action hook
-  const [deleteObservationResponse, deleteObservationAction, isDeletingObservation] =
-    useAction(deleteObservation, [
-      ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Observation deleted successfully.",
-          });
-          // Optionally refresh observations here if needed
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to delete observation.",
-          });
-        }
-      },
-    ]);
+  const [
+    deleteObservationResponse,
+    deleteObservationAction,
+    isDeletingObservation,
+  ] = useAction(deleteObservation, [
+    ,
+    (response) => {
+      if (response) {
+        addToast({
+          title: "Success",
+          description: "Observation deleted successfully.",
+        });
+        // Optionally refresh observations here if needed
+      } else {
+        addToast({
+          title: "Error",
+          description: "Failed to delete observation.",
+        });
+      }
+    },
+  ]);
 
   const handleAddDiagnosis = (item: string) => {
     setDiagnoses([...diagnoses, item]);
