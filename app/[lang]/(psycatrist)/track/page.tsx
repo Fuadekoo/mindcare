@@ -1,128 +1,99 @@
 "use client";
 import React, { useState } from "react";
-import CustomTable from "@/components/custom-table";
+import CustomTable, { ColumnDef } from "@/components/custom-table";
+import { getTrack } from "@/actions/psycatrist/track";
+import useAction from "@/hooks/useActions";
 
-const rows = [
-  {
-    id: 1,
-    name: "John Doe",
-    totalProblems: 5,
-    solved: 3,
-    pending: 2,
-    lastVisit: "2024-06-10",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    totalProblems: 8,
-    solved: 5,
-    pending: 3,
-    lastVisit: "2024-06-12",
-  },
-  {
-    id: 3,
-    name: "Alice Johnson",
-    totalProblems: 2,
-    solved: 1,
-    pending: 1,
-    lastVisit: "2024-06-15",
-  },
-  {
-    id: 4,
-    name: "Bob Brown",
-    totalProblems: 6,
-    solved: 4,
-    pending: 2,
-    lastVisit: "2024-06-20",
-  },
-  {
-    id: 5,
-    name: "Charlie Black",
-    totalProblems: 7,
-    solved: 6,
-    pending: 1,
-    lastVisit: "2024-07-01",
-  },
-  {
-    id: 6,
-    name: "Diana Prince",
-    totalProblems: 4,
-    solved: 2,
-    pending: 2,
-    lastVisit: "2024-07-02",
-  },
-  {
-    id: 7,
-    name: "Ethan Hunt",
-    totalProblems: 3,
-    solved: 1,
-    pending: 2,
-    lastVisit: "2024-07-03",
-  },
-  {
-    id: 8,
-    name: "Fiona Gallagher",
-    totalProblems: 9,
-    solved: 7,
-    pending: 2,
-    lastVisit: "2024-07-04",
-  },
-  {
-    id: 9,
-    name: "George Costanza",
-    totalProblems: 1,
-    solved: 0,
-    pending: 1,
-    lastVisit: "2024-07-05",
-  },
-  {
-    id: 10,
-    name: "Hannah Montana",
-    totalProblems: 10,
-    solved: 8,
-    pending: 2,
-    lastVisit: "2024-07-06",
-  },
-  {
-    id: 11,
-    name: "Ivy League",
-    totalProblems: 3,
-    solved: 2,
-    pending: 1,
-    lastVisit: "2024-07-04",
-  },
-];
+// Define the structure of a row in our table
+interface TrackRow {
+  id: number;
+  name: string;
+  totalProblems: number;
+  solved: number;
+  pending: number;
+  lastVisit: string | null;
+}
 
-const columns = [
-  { key: "name", label: "Name" },
-  { key: "totalProblems", label: "Total Problems" },
-  { key: "solved", label: "Solved" },
-  { key: "pending", label: "Pending" },
-  { key: "lastVisit", label: "Last Visit" },
-];
+// Component to render a progress bar for solved/pending cases
+const ProgressCell = ({ solved, total }: { solved: number; total: number }) => {
+  if (total === 0) {
+    return <div className="text-gray-500">No Cases</div>;
+  }
+  const percentage = Math.round((solved / total) * 100);
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div
+          className="bg-green-500 h-2.5 rounded-full"
+          style={{ width: `${percentage}%` }}
+        ></div>
+      </div>
+      <span className="text-sm font-medium text-gray-700">{percentage}%</span>
+    </div>
+  );
+};
 
 function Page() {
-  const [search, setSearch] = useState("");
-  const [pageSize, setPageSize] = useState(5);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
 
-  // Filter by search
-  const filtered = rows.filter((row) =>
-    row.name.toLowerCase().includes(search.toLowerCase())
+  // Fetch data using the useAction hook
+  const [trackResponse, , isLoading] = useAction(
+    getTrack,
+    [true, () => {}],
+    search,
+    page,
+    pageSize
   );
 
-  // Pagination
-  const totalRows = filtered.length;
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  // Define columns for the custom table
+  const columns: ColumnDef<TrackRow>[] = [
+    {
+      key: "id",
+      label: "Student ID",
+    },
+    {
+      key: "name",
+      label: "Name",
+    },
+    {
+      key: "totalProblems",
+      label: "Total Cases",
+    },
+    {
+      key: "pending",
+      label: "Pending Cases",
+    },
+    {
+      key: "progress",
+      label: "Progress (Solved)",
+      renderCell: (item) => (
+        <ProgressCell solved={item.solved} total={item.totalProblems} />
+      ),
+    },
+    {
+      key: "lastVisit",
+      label: "Last Visit",
+      renderCell: (item) =>
+        item.lastVisit ? new Date(item.lastVisit).toLocaleDateString() : "N/A",
+    },
+  ];
 
-  // Simulate loading state if needed
-  const isLoadingData = false;
+  const rows = trackResponse?.data || [];
+  const totalRows = trackResponse?.pagination?.totalRecords || 0;
 
   return (
-    <div>
+    <div className="p-4 sm:p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Student Tracking</h1>
+        <p className="text-gray-500 mt-1">
+          Overview of student cases and progress.
+        </p>
+      </div>
       <CustomTable
         columns={columns}
-        rows={paginated}
+        rows={rows}
         totalRows={totalRows}
         page={page}
         pageSize={pageSize}
@@ -130,7 +101,7 @@ function Page() {
         onPageSizeChange={setPageSize}
         searchValue={search}
         onSearch={setSearch}
-        isLoading={isLoadingData}
+        isLoading={isLoading}
       />
     </div>
   );
