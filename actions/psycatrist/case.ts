@@ -31,7 +31,7 @@ export async function getCaseCard(
         id: true,
         student: { select: { wdt_ID: true, name: true } },
         historyCode: true,
-        patientTypeData: true,
+        patientData: { select: { type: true } },
         note: true,
         solved: true,
         createdAt: true,

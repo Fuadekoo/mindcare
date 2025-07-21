@@ -24,7 +24,7 @@ type PatientCase = {
   problemType: string;
   status: "solved" | "pending";
   date: string;
-  diagnosis: string;
+  note: string;
 };
 
 // Type for problem type data for the dropdown
@@ -168,12 +168,12 @@ function Page() {
       ? (data as any[]).map((item) => ({
           id: item.id,
           name: item.student?.name,
-          problemType: item.patientType?.type,
-          diagnosis: item.diagnosis ?? "", // Ensure diagnosis is present
+          problemType: item.patientData?.type ?? "Unknown",
+          diagnosis: item.note ?? "empty", // Add diagnosis property
+          date: new Date(item.createdAt).toLocaleDateString(),
           status: item.solved
             ? ("solved" as "solved")
             : ("pending" as "pending"),
-          date: new Date(item.date).toLocaleDateString(),
         }))
       : [];
   }, [casesResponse]);
@@ -284,7 +284,7 @@ function Page() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Note
+                    Note (Optional)
                   </label>
                   <textarea
                     className="w-full p-3 border border-purple-300 rounded-xl focus:ring-2 focus:ring-purple-500"
