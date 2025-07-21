@@ -1,4 +1,14 @@
-import React from "react";
+"use client";
+import React, { useState, useEffect } from "react";
+import useAction from "@/hooks/useActions";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Button,
+} from "@heroui/react";
+import { getGraphData, getYear } from "@/actions/psycatrist/dashboard";
 import {
   CartesianGrid,
   Legend,
@@ -9,70 +19,130 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const data = [
-  {
-    name: "Page A",
-    uv: 4000,
-    pv: 2400,
-    amt: 2400,
-  },
-  {
-    name: "Page B",
-    uv: 3000,
-    pv: 1398,
-    amt: 2210,
-  },
-  {
-    name: "Page C",
-    uv: 2000,
-    pv: 9800,
-    amt: 2290,
-  },
-  {
-    name: "Page D",
-    uv: 2780,
-    pv: 3908,
-    amt: 2000,
-  },
-  {
-    name: "Page E",
-    uv: 1890,
-    pv: 4800,
-    amt: 2181,
-  },
-  {
-    name: "Page F",
-    uv: 2390,
-    pv: 3800,
-    amt: 2500,
-  },
-  {
-    name: "Page G",
-    uv: 3490,
-    pv: 4300,
-    amt: 2100,
-  },
-];
+import { ChevronDown, Loader2 } from "lucide-react";
 
 function Graph() {
+  // State for the selected year, defaulting to the current year
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear()
+  );
+
+  // Fetch the list of available years from the database
+  const [yearsResponse] = useAction(getYear, [true, () => {}]);
+
+  // Fetch graph data based on the selected year
+  const [graphData, , isLoadingGraph] = useAction(
+    getGraphData,
+    [true, () => {}],
+    selectedYear
+  );
+
+  // When years are fetched, set the default selected year to the latest one available
+  useEffect(() => {
+    if (yearsResponse?.data && yearsResponse.data.length > 0) {
+      const latestYear = Math.max(...yearsResponse.data);
+      setSelectedYear(latestYear);
+    }
+  }, [yearsResponse]);
+
+  // Handler for when a new year is selected from the dropdown
+  const handleYearChange = (keys: any) => {
+    // The dropdown returns a Set, we extract the first (and only) key
+    const yearKey = Array.from(keys)[0];
+    if (yearKey) {
+      setSelectedYear(Number(yearKey));
+    }
+  };
+
+  const years = yearsResponse?.data || [];
+
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart width={500} height={300} data={data}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" padding={{ left: 30, right: 30 }} />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line
-          type="monotone"
-          dataKey="pv"
-          stroke="#8884d8"
-          activeDot={{ r: 8 }}
-        />
-        <Line type="monotone" dataKey="uv" stroke="#82ca9d" />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="bg-white p-4 rounded-lg shadow-md relative">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-700">
+          Case Summary - {selectedYear}
+        </h3>
+        <Dropdown>
+          <DropdownTrigger>
+            <Button variant="flat" className="capitalize">
+              {selectedYear}
+              <ChevronDown size={16} className="ml-2" />
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            disallowEmptySelection
+            aria-label="Select Year"
+            selectedKeys={new Set([selectedYear.toString()])}
+            selectionMode="single"
+            onSelectionChange={handleYearChange}
+            items={years.map((year) => ({
+              key: year.toString(),
+              label: year.toString(),
+            }))}
+          >
+            {(item) => <DropdownItem key={item.key}>{item.label}</DropdownItem>}
+          </DropdownMenu>
+        </Dropdown>
+      </div>
+
+      {isLoadingGraph ? (
+        <div className="flex justify-center items-center h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+        </div>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart
+            data={graphData?.data ?? []}
+            margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="month"
+              stroke="#9ca3af"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              stroke="#9ca3af"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "0.5rem",
+              }}
+            />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="total"
+              name="Total Cases"
+              stroke="#8884d8"
+              strokeWidth={2}
+              activeDot={{ r: 6 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="solved"
+              name="Solved"
+              stroke="#82ca9d"
+              strokeWidth={2}
+            />
+            <Line
+              type="monotone"
+              dataKey="pending"
+              name="Pending"
+              stroke="#ffc658"
+              strokeWidth={2}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
 }
 

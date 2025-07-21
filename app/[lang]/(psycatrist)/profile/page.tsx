@@ -2,19 +2,25 @@
 import React from "react";
 import { Phone, Shield, Mail, MapPin } from "lucide-react";
 import Image from "next/image";
+import useAction from "@/hooks/useActions";
+import { getProfile } from "@/actions/psycatrist/profile";
 
 // Sample data for the profile - replace with actual data from your backend
 const userProfile = {
   name: "Dr. Evelyn Reed",
   role: "Psychiatrist",
   phone: "+1 (555) 123-4567",
-  email: "evelyn.reed@mindcare.com",
-  location: "Springfield, IL",
+  email: "info@darelkubra.com",
+  location: "Betel, Addis Ababa, Ethiopia",
   avatarUrl: "/profile.png", // A placeholder path
-  bio: "Dr. Evelyn Reed is a board-certified psychiatrist with over 15 years of experience in diagnosing and treating a wide range of mental health disorders. She is dedicated to providing compassionate and comprehensive care to her patients, helping them to achieve mental wellness and improve their quality of life.",
+  bio: "She is a board-certified psychiatrist with over 15 years of experience in diagnosing and treating a wide range of mental health disorders. She is dedicated to providing compassionate and comprehensive care to her patients, helping them to achieve mental wellness and improve their quality of life.",
 };
 
 function Page() {
+  const [profileData, refreshProfile, isLoadingProfile] = useAction(
+    getProfile,
+    [true, () => {}]
+  );
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -53,8 +59,8 @@ function Page() {
               />
             </div>
             <div className="mt-4 sm:mt-0 text-center sm:text-left">
-              <h1 className="text-3xl font-bold text-gray-800">
-                {userProfile.name}
+              <h1 className="mt-6 text-3xl font-bold text-gray-800">
+                {profileData?.username}
               </h1>
               <p className="text-lg text-purple-600 font-medium">
                 {userProfile.role}
@@ -73,7 +79,7 @@ function Page() {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-blue-500" />
-                <span>{userProfile.phone}</span>
+                <span>{profileData?.phone}</span>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className="w-5 h-5 text-blue-500" />
