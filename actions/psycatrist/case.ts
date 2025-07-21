@@ -104,7 +104,7 @@ export async function changeCaseStatus(id: string, status: boolean) {
 export async function getallDiagnosisPerCase(id: string) {
   try {
     const diagnoses = await prisma.diagnosis.findMany({
-      where: { id },
+      where: { historyId: id },
     });
     return diagnoses;
   } catch (error) {
