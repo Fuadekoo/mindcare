@@ -145,3 +145,28 @@ export async function studentName(id: number) {
     return null;
   }
 }
+
+export async function changeAppointmentStatus(id: string) {
+  try {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+
+    if (!appointment) {
+      throw new Error("Appointment not found");
+    }
+
+    const newStatus = appointment.status === "pending" ? "solved" : "pending";
+
+    await prisma.appointment.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+
+    return { message: "Appointment status updated successfully" };
+  } catch (error) {
+    console.error("Error changing appointment status:", error);
+    return { message: "Failed to change appointment status" };
+  }
+}

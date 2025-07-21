@@ -7,8 +7,10 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import Select from "react-select";
 import useAction from "@/hooks/useActions";
 import {
+  changeAppointmentStatus,
   getAppointments,
   createAppointment,
   deleteAppointment,
@@ -52,6 +54,10 @@ function Page() {
     search,
     page,
     pageSize
+  );
+  const [, changeStatusAction, isChangingStatus] = useAction(
+    changeAppointmentStatus,
+    [, () => {}]
   );
 
   const [, createAction, isCreatingAppointment] = useAction(createAppointment, [
@@ -101,6 +107,20 @@ function Page() {
     }
   };
 
+  const handleChangeStatus = async (id: string) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to change the status of this appointment?"
+      )
+    ) {
+      return;
+    }
+    setIsLoading(true);
+    await changeStatusAction(id);
+    setIsLoading(false);
+    refreshAppointments();
+  };
+
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
     setIsLoading(true);
     if (editItem) {
@@ -139,31 +159,31 @@ function Page() {
           return (page - 1) * pageSize + rowIndexOnPage + 1;
         }
         return item.id?.toString().slice(0, 5) + "...";
-            },
-          },
-          {
-            key: "student",
-            label: "Student",
-            renderCell: (item) => (
+      },
+    },
+    {
+      key: "student",
+      label: "Student",
+      renderCell: (item) => (
         <span>
           {item.student.wdt_ID} - {item.student.name}
         </span>
-            ),
-          },
-          {
-            key: "date",
-            label: "Date",
-            renderCell: (item) => new Date(item.date).toLocaleDateString(),
-          },
-          {
-            key: "time",
-            label: "Time",
-            renderCell: (item) => item.time,
-          },
-          {
-            key: "status",
-            label: "Status",
-            renderCell: (item) => {
+      ),
+    },
+    {
+      key: "date",
+      label: "Date",
+      renderCell: (item) => new Date(item.date).toLocaleDateString(),
+    },
+    {
+      key: "time",
+      label: "Time",
+      renderCell: (item) => item.time,
+    },
+    {
+      key: "status",
+      label: "Status",
+      renderCell: (item) => {
         const statusStyles = {
           Confirmed: "bg-green-100 text-green-800",
           Pending: "bg-yellow-100 text-yellow-800",
@@ -184,6 +204,21 @@ function Page() {
       key: "createdAt",
       label: "Created At",
       renderCell: (item) => new Date(item.createdAt).toLocaleDateString(),
+    },
+    {
+      key: "changeStatus",
+      label: "Change Status",
+      renderCell: (item) => (
+        <Button
+          size="sm"
+          color="primary"
+          variant="flat"
+          onPress={() => handleChangeStatus(item.id)}
+          isLoading={isLoading && isChangingStatus}
+        >
+          Confirm
+        </Button>
+      ),
     },
     {
       key: "actions",
