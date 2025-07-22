@@ -11,14 +11,14 @@ import {
 } from "@heroui/react";
 import { LogOutIcon, UserIcon } from "lucide-react";
 // import Theme from "./theme";
-import { AlignLeft, ChevronLeft, ChevronRight, DoorOpen } from "lucide-react";
+import { AlignLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import useAction from "@/hooks/useActions";
+// import useAction from "@/hooks/useActions";
 // import { getUser } from "../actions/user/newUser"; // Adjust the import path as necessary
 import Image from "next/image";
 // import { div } from "framer-motion/client";
-import { addToast } from "@heroui/toast";
+// import { addToast } from "@heroui/toast";
 import { logout } from "@/actions/common/authentication"; // Add this import
 import DateTimeDisplay from "./DateTimeDisplay";
 
@@ -63,7 +63,7 @@ function Sidebar({
   isManager?: boolean;
 }) {
   const pathname = usePathname() ?? "",
-    [, lang, role, selected] = pathname.split("/");
+    [, lang, selected] = pathname.split("/");
 
   return (
     <aside
@@ -167,7 +167,7 @@ function Header({
   );
 }
 
-function User({ sidebar }: { sidebar: boolean }) {
+function User({}: { sidebar: boolean }) {
   const pathname = usePathname() ?? "",
     [, lang] = pathname.split("/");
   // [data] = useAction(getUser, [true, () => {}]);

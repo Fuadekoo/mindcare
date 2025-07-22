@@ -1,111 +1,41 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import useAction from "@/hooks/useActions";
-import CustomTable, { ColumnDef } from "@/components/custom-table";
+import CustomTable from "@/components/custom-table";
 import { Button } from "@heroui/react";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import {
+  getPatientTypeData,
+  deletePatientType,
+  createPatientType,
+  updatePatientType,
+} from "@/actions/psycatrist/dashboard";
 
-// --- Mock Actions (replace with your actual server actions) ---
-// In a real app, these would be in separate files (e.g., @/actions/psycatrist/patientType.ts)
-const mockPatientTypes = [
-  { id: 1, type: "New Patient", description: "First time visit" },
-  { id: 2, type: "Follow-up", description: "Returning for checkup" },
-  { id: 3, type: "Emergency", description: "Urgent care needed" },
-];
-
-const getPatientTypes = async (
-  search: string,
-  page: number,
-  pageSize: number
-) => {
-  console.log("Fetching...", { search, page, pageSize });
-  let data = mockPatientTypes.filter(
-    (pt) =>
-      pt.type.toLowerCase().includes(search.toLowerCase()) ||
-      pt.description.toLowerCase().includes(search.toLowerCase())
-  );
-  const totalRecords = data.length;
-  data = data.slice((page - 1) * pageSize, page * pageSize);
-  await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
-  return { data, pagination: { totalRecords } };
+type ColumnDef = {
+  key: string;
+  label: string;
+  renderCell?: (item: Record<string, string>) => React.ReactNode;
 };
 
-const deletePatientType = async (id: string) => {
-  console.log("Deleting...", id);
-  const index = mockPatientTypes.findIndex((pt) => pt.id.toString() === id);
-  if (index > -1) {
-    mockPatientTypes.splice(index, 1);
-    return { message: "Patient Type deleted successfully." };
-  }
-  return null;
-};
-
-const createPatientType = async (data: {
-  type: string;
-  description?: string;
-}) => {
-  console.log("Creating...", data);
-  const newId = Math.max(0, ...mockPatientTypes.map((pt) => pt.id)) + 1;
-  mockPatientTypes.push({
-    id: newId,
-    ...data,
-    description: data.description || "",
-  });
-  return { message: "Patient Type created successfully." };
-};
-
-const updatePatientType = async (
-  id: string,
-  data: { type: string; description?: string }
-) => {
-  console.log("Updating...", id, data);
-  const index = mockPatientTypes.findIndex((pt) => pt.id.toString() === id);
-  if (index > -1) {
-    mockPatientTypes[index] = { ...mockPatientTypes[index], ...data };
-    return { message: "Patient Type updated successfully." };
-  }
-  return null;
-};
-// --- End of Mock Actions ---
-
-// Zod schema for validation
 const patientTypeSchema = z.object({
   type: z.string().min(3, { message: "Type must be at least 3 characters." }),
   description: z.string().optional(),
 });
 
-// Interface for a single patient type item
-interface PatientTypeItem {
-  id: string | number;
-  key?: string | number;
-  type: string;
-  description?: string;
-}
-
 function PatientTypePage() {
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<PatientTypeItem | null>(null);
-
-  const {
-    handleSubmit,
-    register,
-    reset,
-    setValue,
-    formState: { errors },
-  } = useForm<z.infer<typeof patientTypeSchema>>({
-    resolver: zodResolver(patientTypeSchema),
-  });
-
-  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState<string | null>(null);
 
+  // Fetch data from server
   const [patientTypeData, refreshPatientTypes, isLoadingData] = useAction(
-    getPatientTypes,
+    getPatientTypeData,
     [true, () => {}],
     search,
     page,
@@ -154,14 +84,38 @@ function PatientTypePage() {
     },
   ]);
 
+  const {
+    handleSubmit,
+    register,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<z.infer<typeof patientTypeSchema>>({
+    resolver: zodResolver(patientTypeSchema),
+  });
+
   const handleDelete = async (id: string | number) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       await executeDelete(id.toString());
     }
   };
 
-  const handleEdit = (item: PatientTypeItem) => {
-    setEditItem(item);
+  interface PatientTypeItem {
+    id: string;
+    type: string;
+    description?: string;
+    [key: string]: any;
+  }
+
+  interface HandleEditProps {
+    type: string;
+    description?: string;
+    id: string;
+    [key: string]: any;
+  }
+
+  const handleEdit = (item: HandleEditProps): void => {
+    setEditItem(item.id);
     setValue("type", item.type);
     setValue("description", item.description || "");
     setShowModal(true);
@@ -175,44 +129,56 @@ function PatientTypePage() {
 
   const onSubmit = async (data: z.infer<typeof patientTypeSchema>) => {
     if (editItem) {
-      executeUpdate(editItem.id.toString(), data);
+      executeUpdate(editItem, data);
     } else {
       executeCreate(data);
     }
   };
 
-  const rows = useMemo(
-    () =>
-      (patientTypeData?.data || []).map((item) => ({
-        ...item,
-        key: item.id.toString(),
-        id: item.id.toString(),
-      })),
-    [patientTypeData]
-  );
+  // Convert all row fields to string for CustomTable compatibility
+  const rows =
+    (patientTypeData?.data || []).map((item: any) => ({
+      key: String(item.id),
+      id: String(item.id),
+      type: item.type ?? "",
+      description: item.description ?? "",
+    })) || [];
 
-  const columns: ColumnDef<PatientTypeItem>[] = [
+  const columns: ColumnDef[] = [
+    {
+      key: "autoId",
+      label: "#",
+      renderCell: (item) => {
+        const rowIndexOnPage = rows.findIndex((r) => r.id === item.id);
+        if (rowIndexOnPage !== -1) {
+          return (page - 1) * pageSize + rowIndexOnPage + 1;
+        }
+        return item.id;
+      },
+    },
     {
       key: "type",
       label: "Type",
+      renderCell: (item) => item.type,
     },
     {
       key: "description",
       label: "Description",
+      renderCell: (item) => item.description,
     },
     {
       key: "actions",
       label: "Actions",
       renderCell: (item) => (
         <div className="flex items-center gap-2">
-          <Button
+            <Button
             size="sm"
             color="primary"
             variant="flat"
             onPress={() => handleEdit(item as PatientTypeItem)}
-          >
+            >
             Edit
-          </Button>
+            </Button>
           <Button
             size="sm"
             color="danger"
@@ -229,8 +195,17 @@ function PatientTypePage() {
 
   const isLoadingAction = isLoadingCreate || isLoadingUpdate;
 
+  // Handle loading state
+  if (isLoadingData && !patientTypeData?.data && page === 1) {
+    return (
+      <div className="flex justify-center items-center h-full p-4">
+        <div>Loading patient types...</div>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="p-4 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Patient Types</h1>
         <Button color="primary" onPress={handleAdd}>
@@ -240,13 +215,19 @@ function PatientTypePage() {
       <CustomTable
         columns={columns}
         rows={rows}
-        totalRows={patientTypeData?.pagination.totalRecords || 0}
+        totalRows={patientTypeData?.pagination?.totalRecords || 0}
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
-        onPageSizeChange={setPageSize}
+        onPageSizeChange={(newPageSize) => {
+          setPageSize(newPageSize);
+          setPage(1);
+        }}
         searchValue={search}
-        onSearch={setSearch}
+        onSearch={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
         isLoading={isLoadingData}
       />
       {/* Modal for Add/Edit */}

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo } from "react";
-import CustomTable, { ColumnDef } from "@/components/custom-table";
+import CustomTable from "@/components/custom-table";
 import { Button } from "@heroui/react";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
@@ -19,27 +19,15 @@ import {
 } from "@/actions/psycatrist/appointment";
 import { appointmentSchema } from "@/lib/zodSchema";
 
-interface StudentOption {
-  value: number;
+type ColumnDef = {
+  key: string;
   label: string;
-}
-
-interface Appointment {
-  id: string;
-  wdt_ID: number;
-  student: {
-    wdt_ID: number;
-    name: string;
-  };
-  date: Date;
-  time: string;
-  status: "Pending" | "Confirmed" | "Cancelled";
-  createdAt: string;
-}
+  renderCell?: (item: Record<string, string>) => React.ReactNode;
+};
 
 function Page() {
   const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<Appointment | null>(null);
+  const [editItem, setEditItem] = useState<AppointmentRow | null>(null);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -55,15 +43,16 @@ function Page() {
   ]);
 
   // --- Form Handling ---
+  // const ak = typeof appointmentSchema;
   const {
     handleSubmit,
     control,
     reset,
     setValue,
-    register, // Added register here
+    register,
     formState: { errors, isSubmitting },
   } = useForm<z.infer<typeof appointmentSchema>>({
-    resolver: zodResolver(appointmentSchema) as any,
+    resolver: zodResolver(appointmentSchema),
     defaultValues: {
       studentId: undefined,
       date: "",
@@ -73,11 +62,11 @@ function Page() {
 
   // --- Actions ---
   const handleActionCompletion = (
-    response: any,
+    response: string,
     successMessage: string,
     errorMessage: string
   ) => {
-    if (response && !response.error) {
+    if (response) {
       addToast({ title: "Success", description: successMessage });
       refreshAppointments();
       if (showModal) {
@@ -87,7 +76,7 @@ function Page() {
     } else {
       addToast({
         title: "Error",
-        description: response?.error || errorMessage,
+        description: errorMessage,
       });
     }
   };
@@ -136,7 +125,7 @@ function Page() {
   );
 
   // Memoize student options for react-select
-  const studentOptions = useMemo<StudentOption[]>(() => {
+  const studentOptions = useMemo(() => {
     if (!studentsResponse?.data) return [];
     return studentsResponse.data.map(
       (student: { wdt_ID: number; name: string | null }) => ({
@@ -153,10 +142,21 @@ function Page() {
     setShowModal(true);
   };
 
-  const handleEdit = (item: Appointment) => {
+  type AppointmentRow = {
+    id: string;
+    student_wdt_ID: string;
+    student_name: string;
+    date: string;
+    time: string;
+    status: string;
+    createdAt: string;
+    [key: string]: string;
+  };
+
+  const handleEdit = (item: AppointmentRow) => {
     setEditItem(item);
-    setValue("studentId", item.student.wdt_ID);
-    setValue("date", new Date(item.date).toISOString().split("T")[0]);
+    setValue("studentId", Number(item.student_wdt_ID));
+    setValue("date", item.date.split("T")[0]);
     setValue("time", item.time);
     setShowModal(true);
   };
@@ -189,42 +189,57 @@ function Page() {
     }
   };
 
-  const isLoading =
-    isCreatingAppointment || isUpdatingAppointment || isSubmitting;
+  // Convert all row fields to string for CustomTable compatibility
+  const rows =
+    (appointmentsResponse?.data || []).map((item: any) => ({
+      key: String(item.id),
+      id: String(item.id),
+      student_wdt_ID: item.student?.wdt_ID ? String(item.student.wdt_ID) : "",
+      student_name: item.student?.name ?? "",
+      date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
+      time: item.time ?? "",
+      status: item.status ?? "",
+      createdAt: item.createdAt ?? "",
+    })) || [];
 
-  // --- Table Columns Definition ---
-  const columns: ColumnDef<Appointment>[] = [
+  const columns: ColumnDef[] = [
     {
       key: "autoId",
       label: "#",
-      renderCell: (item, index) => {
-        const calculatedIndex = (page - 1) * pageSize + index + 1;
-        return isNaN(calculatedIndex) ? "" : calculatedIndex;
+      renderCell: (item) => {
+        const rowIndexOnPage = rows.findIndex((r) => r.id === item.id);
+        if (rowIndexOnPage !== -1) {
+          return (page - 1) * pageSize + rowIndexOnPage + 1;
+        }
+        return item.id;
       },
     },
     {
-      key: "student",
-      label: "Student",
-      renderCell: (item) => (
-        <span>
-          {item.student.wdt_ID} - {item.student.name}
-        </span>
-      ),
+      key: "student_wdt_ID",
+      label: "Student ID",
+      renderCell: (item) => item.student_wdt_ID,
+    },
+    {
+      key: "student_name",
+      label: "Student Name",
+      renderCell: (item) => item.student_name,
     },
     {
       key: "date",
       label: "Date",
-      renderCell: (item) => new Date(item.date).toLocaleDateString(),
+      renderCell: (item) =>
+        item.date ? new Date(item.date).toLocaleDateString() : "N/A",
     },
     {
       key: "time",
       label: "Time",
+      renderCell: (item) => item.time,
     },
     {
       key: "status",
       label: "Status",
       renderCell: (item) => {
-        const statusStyles = {
+        const statusStyles: Record<string, string> = {
           Confirmed: "bg-green-100 text-green-800",
           Pending: "bg-yellow-100 text-yellow-800",
           Cancelled: "bg-red-100 text-red-800",
@@ -243,7 +258,8 @@ function Page() {
     {
       key: "createdAt",
       label: "Created At",
-      renderCell: (item) => new Date(item.createdAt).toLocaleDateString(),
+      renderCell: (item) =>
+        item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "N/A",
     },
     {
       key: "changeStatus",
@@ -287,6 +303,15 @@ function Page() {
     },
   ];
 
+  // Handle loading state
+  if (isLoadingAppointments && !appointmentsResponse?.data && page === 1) {
+    return (
+      <div className="flex justify-center items-center h-full p-4">
+        <div>Loading appointments...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
@@ -298,14 +323,20 @@ function Page() {
       </div>
       <CustomTable
         columns={columns}
-        rows={appointmentsResponse?.data || []}
-        totalRows={appointmentsResponse?.meta?.total || 0}
+        rows={rows}
+        totalRows={appointmentsResponse?.pagination?.totalRecords || 0}
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
-        onPageSizeChange={setPageSize}
+        onPageSizeChange={(newPageSize) => {
+          setPageSize(newPageSize);
+          setPage(1);
+        }}
         searchValue={search}
-        onSearch={setSearch}
+        onSearch={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
         isLoading={isLoadingAppointments}
       />
 
@@ -330,7 +361,11 @@ function Page() {
                         isClearable
                         isSearchable
                         isLoading={isLoadingStudents}
-                        isDisabled={isLoading}
+                        isDisabled={
+                          isCreatingAppointment ||
+                          isUpdatingAppointment ||
+                          isSubmitting
+                        }
                         onChange={(option) =>
                           field.onChange(option ? option.value : undefined)
                         }
@@ -379,7 +414,11 @@ function Page() {
                     type="date"
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
                     {...register("date")}
-                    disabled={isLoading}
+                    disabled={
+                      isCreatingAppointment ||
+                      isUpdatingAppointment ||
+                      isSubmitting
+                    }
                   />
                   {errors.date && (
                     <span className="text-red-500 text-xs mt-1">
@@ -392,7 +431,11 @@ function Page() {
                     type="time"
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
                     {...register("time")}
-                    disabled={isLoading}
+                    disabled={
+                      isCreatingAppointment ||
+                      isUpdatingAppointment ||
+                      isSubmitting
+                    }
                   />
                   {errors.time && (
                     <span className="text-red-500 text-xs mt-1">
@@ -406,17 +449,31 @@ function Page() {
                   variant="ghost"
                   type="button"
                   onPress={() => setShowModal(false)}
-                  disabled={isLoading}
+                  disabled={
+                    isCreatingAppointment ||
+                    isUpdatingAppointment ||
+                    isSubmitting
+                  }
                 >
                   Cancel
                 </Button>
                 <Button
                   color="primary"
                   type="submit"
-                  isLoading={isLoading}
-                  disabled={isLoading}
+                  isLoading={
+                    isCreatingAppointment ||
+                    isUpdatingAppointment ||
+                    isSubmitting
+                  }
+                  disabled={
+                    isCreatingAppointment ||
+                    isUpdatingAppointment ||
+                    isSubmitting
+                  }
                 >
-                  {isLoading && (
+                  {(isCreatingAppointment ||
+                    isUpdatingAppointment ||
+                    isSubmitting) && (
                     <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
                   )}
                   {editItem ? "Update" : "Add"}

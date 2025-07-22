@@ -38,11 +38,15 @@ export type CaseType = z.infer<typeof caseSchema>;
 
 // This schema is used for appointment creation and updates
 export const appointmentSchema = z.object({
-  studentId: z.coerce
-    .number()
-    .min(1, "Student ID is required.")
-    .transform((val) => val as number),
+  studentId: z.number(),
+  // .min(1, "Student ID is required."),
   date: z.string().min(1, "Date is required."),
   time: z.string().min(1, "Time is required."),
 });
 export type AppointmentType = z.infer<typeof appointmentSchema>;
+
+export const patientTypeSchema = z.object({
+  type: z.string().min(1, "Type is required"),
+  description: z.string().optional(),
+});
+export type PatientType = z.infer<typeof patientTypeSchema>;

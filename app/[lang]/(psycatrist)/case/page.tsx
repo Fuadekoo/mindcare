@@ -18,14 +18,14 @@ import {
 import { getStudents } from "@/actions/psycatrist/students";
 import { caseSchema } from "@/lib/zodSchema";
 
-type PatientCase = {
-  id: string;
-  name: string;
-  problemType: string;
-  status: "solved" | "pending";
-  date: string;
-  note: string;
-};
+// type PatientCase = {
+//   id: string;
+//   name: string;
+//   problemType: string;
+//   status: "solved" | "pending";
+//   date: string;
+//   note: string;
+// };
 
 // Type for problem type data for the dropdown
 type ProblemType = {
@@ -43,9 +43,9 @@ function Page() {
   const [showModal, setShowModal] = useState(false);
   const [problemTypes, setProblemTypes] = useState<ProblemType[]>([]);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [search] = useState("");
+  const [page] = useState(1);
+  const [perPage] = useState(10);
 
   // --- Data Fetching & Action Hooks ---
   const [casesResponse, refreshCases, isLoadingCases] = useAction(
@@ -73,8 +73,7 @@ function Page() {
     },
   ]);
 
-  const [patientresponse, refreshPatientTypes, isLoadingPatientTypes] =
-    useAction(patientTypeData, [true, () => {}]);
+  const [patientresponse, ,] = useAction(patientTypeData, [true, () => {}]);
 
   const [, deleteAction, isDeleting] = useAction(deleteCaseCard, [
     ,
@@ -123,7 +122,6 @@ function Page() {
     register,
     reset,
     control,
-    watch,
     formState: { errors },
   } = useForm<z.infer<typeof caseSchema>>({
     resolver: zodResolver(caseSchema),
@@ -171,9 +169,7 @@ function Page() {
           problemType: item.patientData?.type ?? "Unknown",
           diagnosis: item.note ?? "empty", // Add diagnosis property
           date: new Date(item.createdAt).toLocaleDateString(),
-          status: item.solved
-            ? ("solved" as "solved")
-            : ("pending" as "pending"),
+          status: item.solved ? "solved" : ("pending" as const),
         }))
       : [];
   }, [casesResponse]);

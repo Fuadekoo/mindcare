@@ -1,5 +1,7 @@
 "use server";
 import prisma from "@/lib/db";
+import { patientTypeSchema } from "@/lib/zodSchema";
+import { z } from "zod";
 
 // ths dashboard is return total history solved ,pending total student total appointment,pending appointment, total solved appointment, total pending appointment, total solved student, total pending student
 export async function getDashboardCard() {
@@ -32,23 +34,23 @@ export async function getDashboardCard() {
   };
 }
 export async function getYear() {
-    try {
-        const years = await prisma.history.findMany({
-            select: {
-                createdAt: true,
-            },
-        });
+  try {
+    const years = await prisma.history.findMany({
+      select: {
+        createdAt: true,
+      },
+    });
 
-        // Extract years and return unique sorted list
-        const uniqueYears = Array.from(
-            new Set(years.map((item) => item.createdAt.getFullYear()))
-        ).sort((a, b) => a - b);
+    // Extract years and return unique sorted list
+    const uniqueYears = Array.from(
+      new Set(years.map((item) => item.createdAt.getFullYear()))
+    ).sort((a, b) => a - b);
 
-        return { data: uniqueYears };
-    } catch (error) {
-        console.error("Error fetching years:", error);
-        return { error: "Failed to fetch years." };
-    }
+    return { data: uniqueYears };
+  } catch (error) {
+    console.error("Error fetching years:", error);
+    return { error: "Failed to fetch years." };
+  }
 }
 
 // in this it is  for graph display the months and total history count,solved and notSolving in each month by select the year found in the database
@@ -112,10 +114,101 @@ export async function getGraphData(year: number) {
   }
 }
 
-export async function getpaychartData() {}
+export async function getPayChartData() {}
 
-export async function getPatientTypeData() {}
+export async function getPatientTypeData(
+  search?: string,
+  page?: number,
+  pageSize?: number
+) {
+  try {
+    // Default values for pagination
+    page = page || 1;
+    pageSize = pageSize || 10;
 
-export async function createPatientType() {}
+    const where = search
+      ? {
+          OR: [{ type: { contains: search, mode: "insensitive" } }],
+        }
+      : {};
 
-export async function updatePatientType() {}
+    const totalRows = await prisma.patientType.count({ where });
+    const totalPages = Math.ceil(totalRows / pageSize);
+
+    const data = await prisma.patientType.findMany({
+      where,
+      select: {
+        id: true,
+        type: true,
+        description: true,
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        itemsPerPage: pageSize,
+        totalRecords: totalRows,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching patient types:", error);
+    throw new Error("Failed to fetch patient types");
+  }
+}
+
+export async function createPatientType(
+  data: z.infer<typeof patientTypeSchema>
+) {
+  try {
+    const parsedData = patientTypeSchema.parse(data);
+    await prisma.patientType.create({
+      data: {
+        type: parsedData.type,
+        description: parsedData.description,
+      },
+    });
+    return { message: "Patient type created successfully." };
+  } catch (error) {
+    console.error("Error creating patient type:", error);
+    throw new Error("Failed to create patient type");
+  }
+}
+
+export async function updatePatientType(
+  id: string,
+  data: z.infer<typeof patientTypeSchema>
+) {
+  try {
+    const parsedData = patientTypeSchema.parse(data);
+    await prisma.patientType.update({
+      where: { id },
+      data: {
+        type: parsedData.type,
+        description: parsedData.description,
+      },
+    });
+    return { message: "Patient type updated successfully." };
+  } catch (error) {
+    console.error("Error updating patient type:", error);
+    throw new Error("Failed to update patient type");
+  }
+}
+
+export async function deletePatientType(id: string) {
+  try {
+    await prisma.patientType.delete({
+      where: { id },
+    });
+    return { message: "Patient type deleted successfully." };
+  } catch (error) {
+    console.error("Error deleting patient type:", error);
+    throw new Error("Failed to delete patient type");
+  }
+}

@@ -10,7 +10,7 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/react";
 import Loading from "@/components/loading";
 import { addToast } from "@heroui/toast";
-import Link from "next/link";
+// import Link from "next/link";
 import Image from "next/image";
 
 function LoginPage() {
@@ -37,8 +37,6 @@ function LoginPage() {
       }
     },
   ]);
-
-
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-primary-50">

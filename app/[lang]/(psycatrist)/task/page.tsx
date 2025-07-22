@@ -27,9 +27,9 @@ interface Task {
 }
 
 function Page() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [search, setSearch] = useState("");
+  const [page] = useState(1);
+  const [pageSize] = useState(10);
+  const [search] = useState("");
   const {
     handleSubmit,
     register,
@@ -47,25 +47,19 @@ function Page() {
     pageSize
   );
 
-  const [taskResponse, createAction, isCreating] = useAction(createTask, [
+  const [, createAction, isCreating] = useAction(createTask, [, () => {}]);
+
+  // const [updateResponse, updateAction, isUpdatingTask] = useAction(
+  //   changeStatus,
+  //   [, () => {}]
+  // );
+
+  const [, deleteAction, isDeleting] = useAction(deleteTask, [, () => {}]);
+
+  const [, changeStatusAction, isChangingStatus] = useAction(changeStatus, [
     ,
     () => {},
   ]);
-
-  const [updateResponse, updateAction, isUpdatingTask] = useAction(
-    changeStatus,
-    [, () => {}]
-  );
-
-  const [deleteResponse, deleteAction, isDeleting] = useAction(deleteTask, [
-    ,
-    () => {},
-  ]);
-
-  const [statusResponse, changeStatusAction, isChangingStatus] = useAction(
-    changeStatus,
-    [, () => {}]
-  );
   // --- Event Handlers ---
   const onSubmit = async (data: z.infer<typeof taskSchema>) => {
     await createAction(data);
@@ -93,9 +87,19 @@ function Page() {
   const tasks: Task[] = useMemo(
     () =>
       (taskData?.data
-        ? (taskData.data as { note: string; id: string; createdAt: Date; status: string }[]).map((task) => ({
+        ? (
+            taskData.data as {
+              note: string;
+              id: string;
+              createdAt: Date;
+              status: string;
+            }[]
+          ).map((task) => ({
             ...task,
-            createdAt: typeof task.createdAt === "string" ? task.createdAt : task.createdAt.toISOString(),
+            createdAt:
+              typeof task.createdAt === "string"
+                ? task.createdAt
+                : task.createdAt.toISOString(),
             status: task.status === "completed" ? "completed" : "pending",
           }))
         : []) as Task[],
@@ -189,9 +193,6 @@ function Page() {
         <p>
           You have <span className="font-bold">{remainingTodos}</span> remaining
           tasks.
-        </p>
-        <p className="text-sm italic mt-2 text-gray-500">
-          "The secret of getting ahead is getting started." - Mark Twain
         </p>
       </div>
     </div>

@@ -20,9 +20,9 @@ export interface ColumnDef<T> {
 
 interface CustomTableProps {
   rows: Array<
-    Record<string, any> & { key?: string | number; id?: string | number }
+    Record<string, string> & { key?: string | number; id?: string | number }
   >;
-  columns: Array<ColumnDef<Record<string, any>>>;
+  columns: Array<ColumnDef<Record<string, string>>>;
   totalRows: number;
   page: number;
   pageSize: number;

@@ -1,20 +1,15 @@
 "use client";
 import React, { useState } from "react";
-import CustomTable, { ColumnDef } from "@/components/custom-table";
-import { getTrack } from "@/actions/psycatrist/track";
+import CustomTable from "@/components/custom-table";
 import useAction from "@/hooks/useActions";
+import { getTrack } from "@/actions/psycatrist/track";
 
-// Define the structure of a row in our table
-interface TrackRow {
-  id: number;
-  name: string;
-  totalProblems: number;
-  solved: number;
-  pending: number;
-  lastVisit: string | null;
-}
+type ColumnDef = {
+  key: string;
+  label: string;
+  renderCell?: (item: Record<string, string>) => React.ReactNode;
+};
 
-// Component to render a progress bar for solved/pending cases
 const ProgressCell = ({ solved, total }: { solved: number; total: number }) => {
   if (total === 0) {
     return <div className="text-gray-500">No Cases</div>;
@@ -38,7 +33,6 @@ function Page() {
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
 
-  // Fetch data using the useAction hook
   const [trackResponse, , isLoading] = useAction(
     getTrack,
     [true, () => {}],
@@ -47,29 +41,59 @@ function Page() {
     pageSize
   );
 
-  // Define columns for the custom table
-  const columns: ColumnDef<TrackRow>[] = [
+  // Convert all row fields to string for CustomTable compatibility
+  const rows =
+    (trackResponse?.data || []).map((item) => ({
+      key: String(item.id),
+      id: String(item.id),
+      name: item.name ?? "",
+      totalProblems:
+        item.totalProblems != null ? String(item.totalProblems) : "0",
+      solved: item.solved != null ? String(item.solved) : "0",
+      pending: item.pending != null ? String(item.pending) : "0",
+      lastVisit: item.lastVisit ?? "",
+    })) || [];
+
+  const columns: ColumnDef[] = [
+    {
+      key: "autoId",
+      label: "#",
+      renderCell: (item) => {
+        const rowIndexOnPage = rows.findIndex((r) => r.id === item.id);
+        if (rowIndexOnPage !== -1) {
+          return (page - 1) * pageSize + rowIndexOnPage + 1;
+        }
+        return item.id;
+      },
+    },
     {
       key: "id",
       label: "Student ID",
+      renderCell: (item) => item.id,
     },
     {
       key: "name",
       label: "Name",
+      renderCell: (item) => item.name,
     },
     {
       key: "totalProblems",
       label: "Total Cases",
+      renderCell: (item) => item.totalProblems,
     },
     {
       key: "pending",
       label: "Pending Cases",
+      renderCell: (item) => item.pending,
     },
     {
       key: "progress",
       label: "Progress (Solved)",
       renderCell: (item) => (
-        <ProgressCell solved={item.solved} total={item.totalProblems} />
+        <ProgressCell
+          solved={Number(item.solved)}
+          total={Number(item.totalProblems)}
+        />
       ),
     },
     {
@@ -80,8 +104,14 @@ function Page() {
     },
   ];
 
-  const rows = trackResponse?.data || [];
-  const totalRows = trackResponse?.pagination?.totalRecords || 0;
+  // Handle loading state
+  if (isLoading && !trackResponse?.data && page === 1) {
+    return (
+      <div className="flex justify-center items-center h-full p-4">
+        <div>Loading student tracking...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6">
@@ -94,13 +124,19 @@ function Page() {
       <CustomTable
         columns={columns}
         rows={rows}
-        totalRows={totalRows}
+        totalRows={trackResponse?.pagination?.totalRecords || 0}
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
-        onPageSizeChange={setPageSize}
+        onPageSizeChange={(newPageSize) => {
+          setPageSize(newPageSize);
+          setPage(1);
+        }}
         searchValue={search}
-        onSearch={setSearch}
+        onSearch={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
         isLoading={isLoading}
       />
     </div>

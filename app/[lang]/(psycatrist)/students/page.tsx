@@ -1,22 +1,41 @@
 "use client";
 import CustomTable from "@/components/custom-table";
 import React from "react";
-import { Plus, Check, X, Trash2, Search } from "lucide-react";
+// import { Plus, Check, X, Trash2, Search } from "lucide-react";
 import useAction from "@/hooks/useActions";
 import { getStudents } from "@/actions/psycatrist/students";
+
+type StudentRow = {
+  [key: string]: string | undefined;
+  key: string;
+  id: string;
+  name?: string | undefined;
+  // wdt_ID?: number | null | undefined;
+  // passcode?: string | null;
+  // phoneno?: string | null;
+  // country?: string | null;
+  // status?: string | null;
+  // isKid?: boolean  | null;
+  ustaz?: string;
+  subject?: string;
+  package?: string;
+  chat_id?: string;
+  u_control?: string;
+  createdAt?: string;
+};
 
 type ColumnDef = {
   key: string;
   label: string;
-  renderCell: (item: any) => React.ReactNode;
+  renderCell: (item: StudentRow) => React.ReactNode;
 };
 
 function Page() {
   const [page, setPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [search, setSearch] = React.useState("");
-  const [isLoadingDelete, setIsLoadingDelete] = React.useState(false);
-  const [studentsData, fetchStudents, isLoading] = useAction(
+  // const [isLoadingDelete, setIsLoadingDelete] = React.useState(false);
+  const [studentsData] = useAction(
     getStudents,
     [true, () => {}],
     search,
@@ -88,7 +107,7 @@ function Page() {
     {
       key: "isKid",
       label: "Is Kid",
-      renderCell: (item) => item.isKid ? "Yes" : "No",
+      renderCell: (item) => (item.isKid ? "Yes" : "No"),
     },
     {
       key: "ustaz",

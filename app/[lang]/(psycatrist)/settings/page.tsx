@@ -28,7 +28,7 @@ function SettingsPage() {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: {  },
   } = useForm<z.infer<typeof changePasswordSchema>>({
     resolver: zodResolver(changePasswordSchema),
   });

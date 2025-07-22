@@ -31,10 +31,7 @@ import { getDashboardCard } from "@/actions/psycatrist/dashboard";
 // ];
 
 export default function DashboardCards() {
-  const [dashboardData, refreshDashboard, isLoadingDashboard] = useAction(
-    getDashboardCard,
-    [true, () => {}]
-  );
+  const [dashboardData, ,] = useAction(getDashboardCard, [true, () => {}]);
 
   // Prepare card data from dashboardData object
   const cardData = [

@@ -46,7 +46,7 @@ function Graph() {
   }, [yearsResponse]);
 
   // Handler for when a new year is selected from the dropdown
-  const handleYearChange = (keys: any) => {
+  const handleYearChange = (keys: Set<string>) => {
     // The dropdown returns a Set, we extract the first (and only) key
     const yearKey = Array.from(keys)[0];
     if (yearKey) {

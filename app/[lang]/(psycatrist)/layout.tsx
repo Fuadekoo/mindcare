@@ -7,7 +7,6 @@ import {
   Calendar,
   CheckSquare,
   Activity,
-  Bell,
   User,
   Settings,
   CastIcon,

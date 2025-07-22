@@ -56,10 +56,10 @@ function EditableSection({
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<any>) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      handleSubmit(e);
     }
   };
 
@@ -133,22 +133,19 @@ function Page() {
       caseId as string
     );
 
-  const [statusResponse, actionStatus, isLoadingStatus] = useAction(
-    changeCaseStatus,
-    [
-      ,
-      (response) => {
-        if (!response) {
-          addToast({
-            title: "Error",
-            description: "Failed to load case details.",
-          });
-        }
-      },
-    ]
-  );
+  const [, actionStatus, isLoadingStatus] = useAction(changeCaseStatus, [
+    ,
+    (response) => {
+      if (!response) {
+        addToast({
+          title: "Error",
+          description: "Failed to load case details.",
+        });
+      }
+    },
+  ]);
 
-  const [diagnosisResponse, refreshDiagnosis, isLoadingDiagnosis] = useAction(
+  const [diagnosisResponse, refreshDiagnosis] = useAction(
     getallDiagnosisPerCase,
     [
       true,
@@ -164,24 +161,23 @@ function Page() {
     caseId as string
   );
 
-  const [observationResponse, refreshObservation, isLoadingObservation] =
-    useAction(
-      getallObservationPerCase,
-      [
-        true,
-        (response) => {
-          if (!response) {
-            addToast({
-              title: "Error",
-              description: "Failed to load observations.",
-            });
-          }
-        },
-      ],
-      caseId as string
-    );
+  const [observationResponse, refreshObservation] = useAction(
+    getallObservationPerCase,
+    [
+      true,
+      (response) => {
+        if (!response) {
+          addToast({
+            title: "Error",
+            description: "Failed to load observations.",
+          });
+        }
+      },
+    ],
+    caseId as string
+  );
 
-  const [treatmentResponse, refreshTreatment, isLoadingTreatment] = useAction(
+  const [treatmentResponse, refreshTreatment] = useAction(
     getallTreatmentPerCase,
     [
       true,
@@ -198,8 +194,9 @@ function Page() {
   );
 
   // Action hooks
-  const [createDiagnosisResponse, createDiagnosisAction, isCreatingDiagnosis] =
-    useAction(createDiagnosis, [
+  const [, createDiagnosisAction, isCreatingDiagnosis] = useAction(
+    createDiagnosis,
+    [
       ,
       (response) => {
         if (response) {
@@ -215,10 +212,12 @@ function Page() {
           });
         }
       },
-    ]);
+    ]
+  );
 
-  const [deleteDiagnosisResponse, deleteDiagnosisAction, isDeletingDiagnosis] =
-    useAction(deleteDiagnosis, [
+  const [, deleteDiagnosisAction, isDeletingDiagnosis] = useAction(
+    deleteDiagnosis,
+    [
       ,
       (response) => {
         if (response) {
@@ -234,54 +233,54 @@ function Page() {
           });
         }
       },
-    ]);
+    ]
+  );
 
-  const [
-    createObservationResponse,
-    createObservationAction,
-    isCreatingObservation,
-  ] = useAction(createObservation, [
-    ,
-    (response) => {
-      if (response) {
-        addToast({
-          title: "Success",
-          description: "Observation created successfully.",
-        });
-        refreshObservation();
-      } else {
-        addToast({
-          title: "Error",
-          description: "Failed to create observation.",
-        });
-      }
-    },
-  ]);
+  const [, createObservationAction, isCreatingObservation] = useAction(
+    createObservation,
+    [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Observation created successfully.",
+          });
+          refreshObservation();
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to create observation.",
+          });
+        }
+      },
+    ]
+  );
 
-  const [
-    deleteObservationResponse,
-    deleteObservationAction,
-    isDeletingObservation,
-  ] = useAction(deleteObservation, [
-    ,
-    (response) => {
-      if (response) {
-        addToast({
-          title: "Success",
-          description: "Observation deleted successfully.",
-        });
-        refreshObservation();
-      } else {
-        addToast({
-          title: "Error",
-          description: "Failed to delete observation.",
-        });
-      }
-    },
-  ]);
+  const [, deleteObservationAction, isDeletingObservation] = useAction(
+    deleteObservation,
+    [
+      ,
+      (response) => {
+        if (response) {
+          addToast({
+            title: "Success",
+            description: "Observation deleted successfully.",
+          });
+          refreshObservation();
+        } else {
+          addToast({
+            title: "Error",
+            description: "Failed to delete observation.",
+          });
+        }
+      },
+    ]
+  );
 
-  const [createTreatmentResponse, createTreatmentAction, isCreatingTreatment] =
-    useAction(createTreatment, [
+  const [, createTreatmentAction, isCreatingTreatment] = useAction(
+    createTreatment,
+    [
       ,
       (response) => {
         if (response) {
@@ -297,10 +296,12 @@ function Page() {
           });
         }
       },
-    ]);
+    ]
+  );
 
-  const [deleteTreatmentResponse, deleteTreatmentAction, isDeletingTreatment] =
-    useAction(deleteTreatment, [
+  const [, deleteTreatmentAction, isDeletingTreatment] = useAction(
+    deleteTreatment,
+    [
       ,
       (response) => {
         if (response) {
@@ -316,12 +317,13 @@ function Page() {
           });
         }
       },
-    ]);
+    ]
+  );
 
   // Memoized data transformation
   const diagnosesItems = useMemo(() => {
     return (
-      diagnosisResponse?.map((item: any) => ({
+      diagnosisResponse?.map((item) => ({
         id: item.id,
         description: item.description,
         createdAt: item.createdAt,
@@ -371,15 +373,18 @@ function Page() {
             : ""}
         </span>
         <span>
-          {caseDetailsResponse?.solved ? (
+          {isLoadingStatus ? (
+            <Loader2 className="animate-spin text-primary-500 inline-block mr-2" />
+          ) : caseDetailsResponse?.solved ? (
             <>
               <Check className="text-green-600 inline-block mr-2" />
               <ToggleRight className="text-green-600 inline-block mr-2" />
               <button
                 type="button"
                 className="text-primary-400 hover:text-red-600"
-                onClick={() => actionStatus(caseId as string, true)}
+                onClick={() => actionStatus(caseId as string, false)}
                 aria-label="Mark as unsolved"
+                disabled={isLoadingStatus}
               >
                 Mark as Unsolved
               </button>
@@ -393,6 +398,7 @@ function Page() {
                 className="text-primary-400 hover:text-green-600"
                 onClick={() => actionStatus(caseId as string, true)}
                 aria-label="Mark as solved"
+                disabled={isLoadingStatus}
               >
                 Mark as Solved
               </button>

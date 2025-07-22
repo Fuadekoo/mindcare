@@ -17,10 +17,7 @@ const userProfile = {
 };
 
 function Page() {
-  const [profileData, refreshProfile, isLoadingProfile] = useAction(
-    getProfile,
-    [true, () => {}]
-  );
+  const [profileData] = useAction(getProfile, [true, () => {}]);
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
