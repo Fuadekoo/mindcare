@@ -303,3 +303,39 @@ export async function getCasePerStudent(id: number) {
     return [];
   }
 }
+
+export async function rejectOldPendingAppointments() {
+  try {
+    // Get the start and end of the current day
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    // Find and update pending appointments scheduled for today
+    const result = await prisma.appointment.updateMany({
+      where: {
+        status: "pending",
+        date: {
+          gte: startOfToday, // greater than or equal to the start of today
+          lte: endOfToday, // less than or equal to the end of today
+        },
+      },
+      data: {
+        status: "rejected",
+      },
+    });
+
+    console.log(
+      `Automatically rejected ${result.count} pending appointments for today.`
+    );
+    return { success: true, count: result.count };
+  } catch (error) {
+    console.error(
+      "Error in cron job to reject today's pending appointments:",
+      error
+    );
+    return { success: false, error: "Failed to process appointments." };
+  }
+}

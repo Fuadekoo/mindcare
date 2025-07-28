@@ -8,6 +8,7 @@ import { createCaseCard2, patientTypeData } from "@/actions/psycatrist/case";
 import {
   createAppointment,
   getAppointmentById,
+  ChangeAppointmentStatus,
 } from "@/actions/psycatrist/appointment";
 import { Button } from "@heroui/react";
 import { addToast } from "@heroui/toast";
@@ -107,6 +108,13 @@ function Page() {
     (res) => handleActionCompletion(res, "Case created successfully."),
   ]);
 
+  const [, ChangeAppointmentStatusAction, isChangingAppointmentStatus] =
+    useAction(ChangeAppointmentStatus, [
+      ,
+      (res) =>
+        handleActionCompletion(res, "Appointment status changed successfully."),
+    ]);
+
   // --- Form Handling ---
   const caseForm = useForm<z.infer<typeof caseSchema>>({
     resolver: zodResolver(caseSchema),
@@ -139,6 +147,20 @@ function Page() {
   const handleCloseAppointmentDetailModal = () => {
     setShowAppointmentDetailModal(false);
     setSelectedAppointmentId(null);
+  };
+  // const handleCloseAppointmentDetailModal = () => {
+  //   setShowAppointmentDetailModal(false);
+  //   setSelectedAppointmentId(null);
+  // };
+
+  const handleChangeAppointmentStatus = async (
+    status: "rejected" | "confirmed"
+  ) => {
+    if (!selectedAppointmentId) return;
+    await ChangeAppointmentStatusAction(selectedAppointmentId, status);
+    setShowAppointmentDetailModal(false);
+    setSelectedAppointmentId(null);
+    refreshStudents();
   };
 
   const onCaseSubmit = async (data: z.infer<typeof caseSchema>) => {
@@ -485,6 +507,24 @@ function Page() {
               </p>
             )}
             <div className="flex justify-end gap-3 mt-6">
+              <Button
+                color="danger"
+                variant="flat"
+                type="button"
+                disabled={isChangingAppointmentStatus}
+                onPress={() => handleChangeAppointmentStatus("rejected")}
+              >
+                Reject
+              </Button>
+              <Button
+                color="success"
+                variant="flat"
+                type="button"
+                disabled={isChangingAppointmentStatus}
+                onPress={() => handleChangeAppointmentStatus("confirmed")}
+              >
+                Confirm
+              </Button>
               <Button
                 variant="ghost"
                 type="button"

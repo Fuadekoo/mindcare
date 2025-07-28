@@ -226,7 +226,7 @@ export async function getAppointmentById(id: string) {
     });
 
     if (!appointment) {
-      throw new Error("Appointment not found");
+      return null;
     }
 
     return appointment;
@@ -293,5 +293,22 @@ export async function getTodayAppointments(page?: number, pageSize?: number) {
   } catch (error) {
     console.error("Error fetching today's appointments:", error);
     throw new Error("Failed to fetch today's appointments");
+  }
+}
+
+export async function ChangeAppointmentStatus(id: string, status: string) {
+  try {
+    // the status is only reject and  confirm
+    if (status !== "rejected" && status !== "confirmed") {
+      return { message: "Invalid status" };
+    }
+    await prisma.appointment.update({
+      where: { id },
+      data: { status: status },
+    });
+    return { message: `${status} appointment successfully` };
+  } catch (error) {
+    console.error("Error rejecting appointment:", error);
+    return { message: "Failed to reject appointment" };
   }
 }
