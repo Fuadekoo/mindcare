@@ -63,11 +63,39 @@ export async function createCaseCard(
   note?: string
 ) {
   try {
-    const newCase = await prisma.history.create({
+    await prisma.history.create({
       data: {
         studentId,
         patientTypeData,
         note,
+      },
+    });
+    return { message: "Case card created successfully" };
+  } catch (error) {
+    console.error("Error creating case card:", error);
+    return { message: "Failed to create case card" };
+  }
+}
+
+export async function createCaseCard2(
+  studentId: number,
+  patientTypeData: string,
+  note?: string
+) {
+  try {
+    await prisma.history.create({
+      data: {
+        note,
+        student: {
+          connect: {
+            wdt_ID: studentId,
+          },
+        },
+        patientData: {
+          connect: {
+            id: patientTypeData,
+          },
+        },
       },
     });
     return { message: "Case card created successfully" };
@@ -263,3 +291,15 @@ export async function caseDetails(caseId: string) {
 //     return { message: "Failed to update case status" };
 //   }
 // }
+
+export async function getCasePerStudent(id: number) {
+  try {
+    const cases = await prisma.history.findMany({
+      where: { student: { wdt_ID: id }, solved: false },
+    });
+    return cases;
+  } catch (error) {
+    console.error("Error fetching cases for student:", error);
+    return [];
+  }
+}

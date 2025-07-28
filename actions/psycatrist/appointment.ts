@@ -6,18 +6,34 @@ import { auth } from "@/lib/auth";
 export async function getAppointments(
   search?: string,
   page?: number,
-  pageSize?: number
+  pageSize?: number,
+  startDate?: Date,
+  endDate?: Date
 ) {
   try {
     // Default values for pagination
     page = page || 1;
     pageSize = pageSize || 10;
 
-    const where = search
-      ? {
-          OR: [{ student: { name: { contains: search } } }],
-        }
-      : {};
+    const where: any = {};
+
+    if (search) {
+      where.student = {
+        name: {
+          contains: search,
+          mode: "insensitive", // Case-insensitive search
+        },
+      };
+    }
+
+    if (startDate && endDate) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      where.createdAt = {
+        gte: startDate,
+        lte: endOfDay,
+      };
+    }
 
     const totalRows = await prisma.appointment.count({ where });
     const totalPages = Math.ceil(totalRows / pageSize);
@@ -168,5 +184,114 @@ export async function changeAppointmentStatus(id: string) {
   } catch (error) {
     console.error("Error changing appointment status:", error);
     return { message: "Failed to change appointment status" };
+  }
+}
+
+export async function getAppointmentPerStudent(id: number) {
+  try {
+    const appointments = await prisma.appointment.findMany({
+      where: { studentId: id, status: "pending" },
+      select: {
+        id: true,
+        date: true,
+        time: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+    return appointments;
+  } catch (error) {
+    console.error("Error fetching appointments for student:", error);
+    return [];
+  }
+}
+
+export async function getAppointmentById(id: string) {
+  try {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        student: {
+          select: {
+            wdt_ID: true,
+            name: true,
+          },
+        },
+        date: true,
+        time: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    if (!appointment) {
+      throw new Error("Appointment not found");
+    }
+
+    return appointment;
+  } catch (error) {
+    console.error("Error fetching appointment by ID:", error);
+    return null;
+  }
+}
+export async function getTodayAppointments(page?: number, pageSize?: number) {
+  try {
+    // Default values for pagination
+    page = page || 1;
+    pageSize = pageSize || 10;
+
+    // Get today's date range (00:00:00 to 23:59:59 UTC)
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(today);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    const where = {
+      status: "pending",
+      date: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    };
+
+    const totalRows = await prisma.appointment.count({ where });
+    const totalPages = Math.ceil(totalRows / pageSize);
+
+    const data = await prisma.appointment.findMany({
+      where,
+      select: {
+        id: true,
+        student: {
+          select: {
+            wdt_ID: true,
+            name: true,
+          },
+        },
+        date: true,
+        time: true,
+        status: true,
+        createdAt: true,
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    console.log("Today's appointments:", data);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        itemsPerPage: pageSize,
+        totalRecords: totalRows,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching today's appointments:", error);
+    throw new Error("Failed to fetch today's appointments");
   }
 }

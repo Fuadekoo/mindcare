@@ -8,8 +8,10 @@ import {
   TableRow,
   TableCell,
   getKeyValue,
+  Calendar,
 } from "@heroui/react";
-import { X, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { parseDate } from "@internationalized/date";
+import { X, Search, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import Image from "next/image";
 
 export interface ColumnDef<T> {
@@ -20,9 +22,9 @@ export interface ColumnDef<T> {
 
 interface CustomTableProps {
   rows: Array<
-    Record<string, string> & { key?: string | number; id?: string | number }
+    Record<string, any> & { key?: string | number; id?: string | number }
   >;
-  columns: Array<ColumnDef<Record<string, string>>>;
+  columns: Array<ColumnDef<Record<string, any>>>;
   totalRows: number;
   page: number;
   pageSize: number;
@@ -31,9 +33,16 @@ interface CustomTableProps {
   searchValue: string;
   onSearch: (value: string) => void;
   isLoading?: boolean;
+  enableDateFilter?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateChange?: (dates: {
+    startDate: string | null;
+    endDate: string | null;
+  }) => void;
 }
 
-const PAGE_SIZES = [1, 25, 50, 100];
+const PAGE_SIZES = [10, 25, 50, 100];
 
 function CustomTable({
   rows,
@@ -46,9 +55,33 @@ function CustomTable({
   searchValue,
   onSearch,
   isLoading = false,
+  enableDateFilter = false,
+  startDate,
+  endDate,
+  onDateChange,
 }: CustomTableProps) {
   const totalPages = Math.max(Math.ceil(totalRows / pageSize), 1);
   const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
+  const [showDateFilter, setShowDateFilter] = useState(false);
+
+  const [localStartDate, setLocalStartDate] = useState(startDate || "");
+  const [localEndDate, setLocalEndDate] = useState(endDate || "");
+
+  const handleApplyDateFilter = () => {
+    if (onDateChange) {
+      onDateChange({ startDate: localStartDate, endDate: localEndDate });
+    }
+    setShowDateFilter(false);
+  };
+
+  const handleClearDateFilter = () => {
+    setLocalStartDate("");
+    setLocalEndDate("");
+    if (onDateChange) {
+      onDateChange({ startDate: null, endDate: null });
+    }
+    setShowDateFilter(false);
+  };
 
   const handleImageClick = (imageUrl: string) => {
     setZoomedImageUrl(imageUrl);
@@ -62,19 +95,30 @@ function CustomTable({
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
       {/* Search and page size */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-        <div className="relative w-full sm:w-auto">
-          <Search
-            className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
-            aria-hidden="true"
-          />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchValue}
-            onChange={(e) => onSearch(e.target.value)}
-            className="w-full sm:w-64 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            disabled={isLoading}
-          />
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
+            <Search
+              className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchValue}
+              onChange={(e) => onSearch(e.target.value)}
+              className="w-full sm:w-64 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              disabled={isLoading}
+            />
+          </div>
+          {enableDateFilter && (
+            <button
+              onClick={() => setShowDateFilter(true)}
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100"
+              aria-label="Filter by date"
+            >
+              <Filter className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span>Rows per page:</span>
@@ -92,6 +136,73 @@ function CustomTable({
           </select>
         </div>
       </div>
+
+      {/* Date Filter Modal */}
+      {showDateFilter && enableDateFilter && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-3xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Filter by Date</h2>
+              <button
+                onClick={() => setShowDateFilter(false)}
+                className="p-1 rounded-full hover:bg-gray-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex flex-col sm:flex-row items-start justify-center gap-2">
+              <div className="flex-1">
+              <h3 className="text-sm font-medium text-gray-700 mb-2 text-center">
+                Start Date
+              </h3>
+              <Calendar
+                aria-label="Start Date"
+                value={localStartDate ? parseDate(localStartDate) : null}
+                onChange={(date) =>
+                setLocalStartDate(date ? date.toString() : "")
+                }
+                isDisabled={isLoading}
+              />
+              </div>
+              <div className="flex-1">
+              <h3 className="text-sm font-medium text-gray-700 mb-2 text-center">
+                End Date
+              </h3>
+              <Calendar
+                aria-label="End Date"
+                value={localEndDate ? parseDate(localEndDate) : null}
+                onChange={(date) =>
+                setLocalEndDate(date ? date.toString() : "")
+                }
+                isDisabled={isLoading}
+              />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowDateFilter(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearDateFilter}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                Clear
+              </button>
+              <button
+                onClick={handleApplyDateFilter}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Table */}
       <div className="overflow-x-auto border border-gray-200 rounded-lg">

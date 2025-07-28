@@ -42,6 +42,26 @@ export async function getStudents(
         package: true,
         chat_id: true,
         u_control: true,
+        history: {
+          // where: { solved: false },
+          select: {
+            id: true,
+            solved: true,
+          },
+          orderBy: {
+            createdAt: "desc", // Order by date to easily find the last visit
+          },
+        },
+        appointment: {
+          where: { status: "pending" },
+          select: {
+            id: true,
+            status: true,
+          },
+          orderBy: {
+            createdAt: "desc", // Order by date to easily find the last appointment
+          },
+        },
       },
       // orderBy: { createdAt: "desc" },
       skip: (page - 1) * pageSize,

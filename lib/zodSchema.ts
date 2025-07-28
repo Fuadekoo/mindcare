@@ -25,12 +25,7 @@ export const taskSchema = z.object({
 export type TaskType = z.infer<typeof taskSchema>;
 
 export const caseSchema = z.object({
-  studentId: z
-    .any()
-    .refine((val) => val !== null && val !== "" && val !== 0, {
-      message: "Please select a student.",
-    })
-    .transform((val) => Number(val)),
+  studentId: z.number(),
   problemTypeId: z.string().min(3, "Problem type is required."),
   note: z.string().optional(),
 });

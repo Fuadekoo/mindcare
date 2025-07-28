@@ -9,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 import useAction from "@/hooks/useActions";
+import { Calendar } from "@heroui/react";
+import { parseDate } from "@internationalized/date";
 import { getStudents } from "@/actions/psycatrist/students";
 import {
   changeAppointmentStatus,
@@ -32,10 +34,19 @@ function Page() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
-
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   // --- Data Fetching ---
   const [appointmentsResponse, refreshAppointments, isLoadingAppointments] =
-    useAction(getAppointments, [true, () => {}], search, page, pageSize);
+    useAction(
+      getAppointments,
+      [true, () => {}],
+      search,
+      page,
+      pageSize,
+      startDate,
+      endDate
+    );
 
   const [studentsResponse, , isLoadingStudents] = useAction(getStudents, [
     true,
@@ -62,7 +73,7 @@ function Page() {
 
   // --- Actions ---
   const handleActionCompletion = (
-    response: string,
+    response: any,
     successMessage: string,
     errorMessage: string
   ) => {
@@ -79,6 +90,18 @@ function Page() {
         description: errorMessage,
       });
     }
+  };
+
+  const handleDateChange = ({
+    startDate,
+    endDate,
+  }: {
+    startDate: string | null;
+    endDate: string | null;
+  }) => {
+    setStartDate(startDate ? new Date(startDate) : undefined);
+    setEndDate(endDate ? new Date(endDate) : undefined);
+    setPage(1); // Reset to the first page when the filter changes
   };
 
   const [, createAction, isCreatingAppointment] = useAction(createAppointment, [
@@ -191,7 +214,7 @@ function Page() {
 
   // Convert all row fields to string for CustomTable compatibility
   const rows =
-    (appointmentsResponse?.data || []).map((item: any) => ({
+    (appointmentsResponse?.data || []).map((item) => ({
       key: String(item.id),
       id: String(item.id),
       student_wdt_ID: item.student?.wdt_ID ? String(item.student.wdt_ID) : "",
@@ -199,7 +222,7 @@ function Page() {
       date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
       time: item.time ?? "",
       status: item.status ?? "",
-      createdAt: item.createdAt ?? "",
+      createdAt: item.createdAt ? new Date(item.createdAt).toISOString() : "",
     })) || [];
 
   const columns: ColumnDef[] = [
@@ -285,7 +308,7 @@ function Page() {
             size="sm"
             color="primary"
             variant="flat"
-            onPress={() => handleEdit(item)}
+            onPress={() => handleEdit(item as AppointmentRow)}
           >
             Edit
           </Button>
@@ -338,6 +361,12 @@ function Page() {
           setPage(1);
         }}
         isLoading={isLoadingAppointments}
+        enableDateFilter={true}
+        startDate={
+          startDate ? startDate.toISOString().split("T")[0] : undefined
+        }
+        endDate={endDate ? endDate.toISOString().split("T")[0] : undefined}
+        onDateChange={handleDateChange}
       />
 
       {/* Modal for Add/Edit */}

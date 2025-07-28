@@ -333,7 +333,7 @@ function Page() {
 
   const observationsItems = useMemo(() => {
     return (
-      observationResponse?.map((item: any) => ({
+      observationResponse?.map((item) => ({
         id: item.id,
         description: item.description,
         createdAt: item.createdAt,
@@ -343,7 +343,7 @@ function Page() {
 
   const treatmentsItems = useMemo(() => {
     return (
-      treatmentResponse?.map((item: any) => ({
+      treatmentResponse?.map((item) => ({
         id: item.id,
         description: item.description,
         createdAt: item.createdAt,
@@ -453,7 +453,7 @@ function Page() {
       </div>
       <div className="bg-white/100 shadow-secondary-400 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
         <EditableSection
-          title="diagnosis"
+          title="History"
           items={diagnosesItems}
           onAddItem={(text) => createDiagnosisAction(caseId as string, text)}
           onDeleteItem={(id) => deleteDiagnosisAction(id)}
@@ -461,7 +461,7 @@ function Page() {
           isDeleting={isDeletingDiagnosis}
         />
         <EditableSection
-          title="observation"
+          title="Diagnosis"
           items={observationsItems}
           onAddItem={(text) => createObservationAction(caseId as string, text)}
           onDeleteItem={(id) => deleteObservationAction(id)}

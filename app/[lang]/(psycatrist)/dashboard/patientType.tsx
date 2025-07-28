@@ -104,14 +104,14 @@ function PatientTypePage() {
     id: string;
     type: string;
     description?: string;
-    [key: string]: any;
+    [key: string]: string | undefined;
   }
 
   interface HandleEditProps {
     type: string;
     description?: string;
     id: string;
-    [key: string]: any;
+    [key: string]: string | undefined;
   }
 
   const handleEdit = (item: HandleEditProps): void => {
@@ -137,7 +137,7 @@ function PatientTypePage() {
 
   // Convert all row fields to string for CustomTable compatibility
   const rows =
-    (patientTypeData?.data || []).map((item: any) => ({
+    (patientTypeData?.data || []).map((item) => ({
       key: String(item.id),
       id: String(item.id),
       type: item.type ?? "",
@@ -171,14 +171,14 @@ function PatientTypePage() {
       label: "Actions",
       renderCell: (item) => (
         <div className="flex items-center gap-2">
-            <Button
+          <Button
             size="sm"
             color="primary"
             variant="flat"
             onPress={() => handleEdit(item as PatientTypeItem)}
-            >
+          >
             Edit
-            </Button>
+          </Button>
           <Button
             size="sm"
             color="danger"

@@ -163,13 +163,13 @@ function Page() {
   const patientHistory = useMemo(() => {
     const data = casesResponse?.data || [];
     return Array.isArray(data)
-      ? (data as any[]).map((item) => ({
+      ? data.map((item) => ({
           id: item.id,
-          name: item.student?.name,
+          name: item.student.name,
           problemType: item.patientData?.type ?? "Unknown",
           diagnosis: item.note ?? "empty", // Add diagnosis property
           date: new Date(item.createdAt).toLocaleDateString(),
-          status: item.solved ? "solved" : ("pending" as const),
+          status: item.solved ? "solved" : "pending",
         }))
       : [];
   }, [casesResponse]);
