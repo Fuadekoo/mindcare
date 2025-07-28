@@ -24,7 +24,7 @@ type Patient = {
   problemType: string;
   diagnosis: string;
   date: string;
-  status: "solved" | "pending";
+  status: boolean;
 };
 
 // Props for the CustomCard component.
@@ -50,7 +50,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
     return patientHistory
       .filter((patient) => {
         if (statusFilter === "all") return true;
-        return patient.status === statusFilter;
+        return (patient.status ? "solved" : "pending") === statusFilter;
       })
       .filter((patient) => {
         const query = searchQuery.toLowerCase();
@@ -151,12 +151,12 @@ export const CustomCard: React.FC<CustomCardProps> = ({
               <div className="flex justify-between items-center mt-3">
                 <span
                   className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
-                    patient.status === "solved"
+                    patient.status
                       ? "bg-green-100 text-green-800"
                       : "bg-yellow-100 text-yellow-800"
                   }`}
                 >
-                  {patient.status}
+                  {patient.status ? "solved" : "pending"}
                 </span>
                 <div className="flex items-center gap-2">
                   <Button

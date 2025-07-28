@@ -326,7 +326,7 @@ function Page() {
       diagnosisResponse?.map((item) => ({
         id: item.id,
         description: item.description,
-        createdAt: item.createdAt,
+        createdAt: typeof item.createdAt === "string" ? item.createdAt : item.createdAt.toISOString(),
       })) || []
     );
   }, [diagnosisResponse]);
@@ -336,7 +336,7 @@ function Page() {
       observationResponse?.map((item) => ({
         id: item.id,
         description: item.description,
-        createdAt: item.createdAt,
+        createdAt: typeof item.createdAt === "string" ? item.createdAt : item.createdAt.toISOString(),
       })) || []
     );
   }, [observationResponse]);
@@ -346,7 +346,7 @@ function Page() {
       treatmentResponse?.map((item) => ({
         id: item.id,
         description: item.description,
-        createdAt: item.createdAt,
+        createdAt: typeof item.createdAt === "string" ? item.createdAt : item.createdAt.toISOString(),
       })) || []
     );
   }, [treatmentResponse]);

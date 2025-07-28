@@ -11,7 +11,7 @@ import {
   Tooltip,
 } from "recharts";
 
-type TooltipPayload = ReadonlyArray<any>;
+type TooltipPayload = ReadonlyArray<string>;
 
 type Coordinate = {
   x: number;
@@ -27,7 +27,7 @@ type PieSectorData = {
   value?: number;
   paddingAngle?: number;
   dataKey?: string;
-  payload?: any;
+  payload?: string | number;
   tooltipPayload?: ReadonlyArray<TooltipPayload>;
 };
 
@@ -42,7 +42,7 @@ type GeometrySector = {
 
 type PieLabelProps = PieSectorData &
   GeometrySector & {
-    tooltipPayload?: any;
+    tooltipPayload?: ReadonlyArray<TooltipPayload>;
   };
 
 const RADIAN = Math.PI / 180;

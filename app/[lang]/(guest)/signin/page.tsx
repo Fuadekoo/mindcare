@@ -29,6 +29,7 @@ function LoginPage() {
           title: "Login",
           description: response.message,
         });
+        window.location.reload();
       } else {
         addToast({
           title: "Login",

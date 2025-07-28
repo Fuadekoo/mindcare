@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import CustomTable from "@/components/custom-table";
 import useAction from "@/hooks/useActions";
@@ -24,13 +24,19 @@ type Student = {
   name: string;
   history: { id: string; solved: boolean }[];
   appointment: { id: string; status: string }[];
-  // [key: string]: any;
+  // Add other properties that exist in your data
+  wdt_ID?: string;
+  phoneno?: string;
+  country?: string;
+  status?: string;
+  // [key: string]: any; // Uncomment if you need dynamic properties
 };
 
-interface ColumnDef {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface ColumnDef<T = any> {
   key: string;
   label: string;
-  renderCell?: (item: Record<string, string>) => React.ReactNode;
+  renderCell?: (item: T) => React.ReactNode;
 }
 
 function Page() {
@@ -174,19 +180,64 @@ function Page() {
   };
 
   // --- Table Rows & Columns ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows: Student[] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (studentsResponse?.data || []).map((student: any) => ({
       key: String(student.wdt_ID),
       id: String(student.wdt_ID),
       ...student,
     })) || [];
 
+  // Adapt rows to Record<string, string> & { key?: string | number; id?: string | number }
+  const adaptedRows = rows.map((student) => {
+    const {
+      key,
+      id,
+      name,
+      wdt_ID,
+      phoneno,
+      country,
+      status,
+      history,
+      appointment,
+    } = student;
+    return {
+      key: key,
+      id: String(id),
+      name: name ?? "",
+      wdt_ID: wdt_ID ?? "",
+      phoneno: phoneno ?? "",
+      country: country ?? "",
+      status: status ?? "",
+      history: history && Array.isArray(history) ? JSON.stringify(history) : "",
+      appointment:
+        appointment && Array.isArray(appointment)
+          ? JSON.stringify(appointment)
+          : "",
+    };
+  });
+
+  // const adaptStudentForTable = (student: any): Student => ({
+  //   key: String(student.wdt_ID),
+  //   id: student.wdt_ID,
+  //   name: student.name || "",
+  //   history: student.history || [],
+  //   appointment: student.appointment || [],
+  //   wdt_ID: student.wdt_ID ? String(student.wdt_ID) : undefined,
+  //   phoneno: student.phoneno || undefined,
+  //   country: student.country || undefined,
+  //   status: student.status || undefined,
+  // });
+
   const columns: ColumnDef[] = [
     {
       key: "autoId",
       label: "#",
       renderCell: (item) => {
-        const rowIndexOnPage = rows.findIndex((r) => r.id === item.id);
+        const rowIndexOnPage = rows.findIndex(
+          (r) => String(r.id) === String(item.id)
+        );
         return rowIndexOnPage !== -1
           ? (page - 1) * pageSize + rowIndexOnPage + 1
           : item.id;
@@ -203,28 +254,43 @@ function Page() {
       label: "Case List",
       renderCell: (item: Student) => {
         if (!item.history || item.history.length === 0) {
+          console.log("here", item.history);
           return <span className="text-gray-500">no flow up</span>;
-        }
-        return (
-          <div className="grid grid-cols-4 gap-9">
-            {item.history.map((caseItem, index) => {
-              const isSolved = caseItem.solved;
-              const linkClass = isSolved
-                ? "text-sm text-green-600 hover:underline hover:text-green-800 bg-green-100  pl-2 pr-5 py-1 rounded-md"
-                : "text-sm text-red-600 hover:underline hover:text-red-800 bg-red-100 pl-2 pr-5  py-1 rounded-md";
+        } else {
+          console.log("here >> ", JSON.parse(JSON.stringify(item.history)));
+          return (
+            <div className="grid grid-cols-4 gap-9">
+              {(() => {
+                let historyArr: { id: string; solved: boolean }[] = [];
+                try {
+                  historyArr = typeof item.history === "string"
+                    ? JSON.parse(item.history)
+                    : Array.isArray(item.history)
+                    ? item.history
+                    : [];
+                } catch {
+                  historyArr = [];
+                }
+                return historyArr.map((caseItem, index) => {
+                  const isSolved = caseItem.solved;
+                  const linkClass = isSolved
+                    ? "text-sm text-green-600 hover:underline hover:text-green-800 bg-green-100  pl-2 pr-5 py-1 rounded-md"
+                    : "text-sm text-red-600 hover:underline hover:text-red-800 bg-red-100 pl-2 pr-5  py-1 rounded-md";
 
-              return (
-                <Link
-                  key={caseItem.id}
-                  href={`/en/case/${caseItem.id}`}
-                  className={linkClass}
-                >
-                  {`C${index + 1}`}
-                </Link>
-              );
-            })}
-          </div>
-        );
+                  return (
+                    <Link
+                      key={caseItem.id}
+                      href={`/en/case/${caseItem.id}`}
+                      className={linkClass}
+                    >
+                      {`C${index + 1}`}
+                    </Link>
+                  );
+                });
+              })()}
+            </div>
+          );
+        }
       },
     },
     {
@@ -236,16 +302,28 @@ function Page() {
         }
         return (
           <div className="flex flex-wrap gap-2 items-center">
-            {item.appointment.map((appt, index) => (
-              <button
-                key={appt.id}
-                onMouseEnter={() => setData(appt.id)}
-                onClick={() => handleOpenAppointmentDetailModal(appt.id)}
-                className="text-sm text-blue-600 hover:underline hover:text-blue-800 bg-blue-100 px-2 py-1 rounded-md"
-              >
-                {`P${index + 1}`}
-              </button>
-            ))}
+            {(() => {
+              let appointmentArr: { id: string; status: string }[] = [];
+              try {
+                appointmentArr = typeof item.appointment === "string"
+                  ? JSON.parse(item.appointment)
+                  : Array.isArray(item.appointment)
+                  ? item.appointment
+                  : [];
+              } catch {
+                appointmentArr = [];
+              }
+              return appointmentArr.map((appt, index) => (
+                <button
+                  key={appt.id}
+                  onMouseEnter={() => setData(appt.id)}
+                  onClick={() => handleOpenAppointmentDetailModal(appt.id)}
+                  className="text-sm text-blue-600 hover:underline hover:text-blue-800 bg-blue-100 px-2 py-1 rounded-md"
+                >
+                  {`P${index + 1}`}
+                </button>
+              ));
+            })()}
           </div>
         );
       },
@@ -294,7 +372,7 @@ function Page() {
       </div>
       <CustomTable
         columns={columns}
-        rows={rows}
+        rows={adaptedRows}
         totalRows={studentsResponse?.pagination?.totalRecords || 0}
         page={page}
         pageSize={pageSize}
@@ -334,11 +412,13 @@ function Page() {
                         ? "Loading..."
                         : "Select a problem type"}
                     </option>
-                    {(patientTypeResponse || []).map((pt: any) => (
-                      <option key={pt.id} value={pt.id}>
-                        {pt.type}
-                      </option>
-                    ))}
+                    {(patientTypeResponse || []).map(
+                      (pt: { id: string; type: string }) => (
+                        <option key={pt.id} value={pt.id}>
+                          {pt.type}
+                        </option>
+                      )
+                    )}
                   </select>
                   {caseForm.formState.errors.problemTypeId && (
                     <span className="text-red-500 text-xs mt-1">

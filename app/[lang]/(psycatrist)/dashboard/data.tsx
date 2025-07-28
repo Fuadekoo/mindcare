@@ -24,8 +24,14 @@ function Data() {
     pageSize
   );
 
+  type Appointment = {
+    id: string | number;
+    student?: { name: string | null };
+    time?: string;
+  };
+
   const rows =
-    (appointmentsResponse?.data || []).map((item: any) => ({
+    (appointmentsResponse?.data || []).map((item: Appointment) => ({
       key: String(item.id),
       id: String(item.id),
       patient: item.student?.name ?? "N/A",
@@ -43,7 +49,7 @@ function Data() {
     <div className="p-4 sm:p-6 bg-white rounded-lg shadow-sm">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
         <h2 className="text-xl font-bold text-gray-800">
-          Today's Appointments
+          Today&apos;s Appointments
         </h2>
         <div className="flex items-center gap-2 text-sm text-gray-700">
           <span>Rows per page:</span>

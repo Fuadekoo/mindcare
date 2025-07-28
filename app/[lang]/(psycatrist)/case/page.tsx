@@ -28,10 +28,10 @@ import { caseSchema } from "@/lib/zodSchema";
 // };
 
 // Type for problem type data for the dropdown
-type ProblemType = {
-  id: string;
-  type: string;
-};
+// type ProblemType = {
+//   id: string;
+//   type: string;
+// };
 
 // Type for student data for the dropdown
 type StudentOption = {
@@ -41,7 +41,7 @@ type StudentOption = {
 
 function Page() {
   const [showModal, setShowModal] = useState(false);
-  const [problemTypes, setProblemTypes] = useState<ProblemType[]>([]);
+  // const [problemTypes, setProblemTypes] = useState<ProblemType[]>([]);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
   const [search] = useState("");
   const [page] = useState(1);
@@ -96,7 +96,7 @@ function Page() {
   // Fetch students and problem types for the dropdowns
   useEffect(() => {
     const fetchDataForSelects = async () => {
-      const [studentsResult, problemTypesResult] = await Promise.all([
+      const [studentsResult] = await Promise.all([
         getStudents("", 1, 1000), // Fetch all students
         patientTypeData(),
       ]);
@@ -110,9 +110,9 @@ function Page() {
         );
       }
 
-      if (problemTypesResult && Array.isArray(problemTypesResult)) {
-        setProblemTypes(problemTypesResult);
-      }
+      // if (problemTypesResult && Array.isArray(problemTypesResult)) {
+      //   setProblemTypes(problemTypesResult);
+      // }
     };
     fetchDataForSelects();
   }, []);
@@ -169,7 +169,7 @@ function Page() {
           problemType: item.patientData?.type ?? "Unknown",
           diagnosis: item.note ?? "empty", // Add diagnosis property
           date: new Date(item.createdAt).toLocaleDateString(),
-          status: item.solved ? "solved" as "solved" : "pending" as "pending",
+          status: item.solved,
         }))
       : [];
   }, [casesResponse]);
