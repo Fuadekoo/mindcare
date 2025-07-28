@@ -212,3 +212,25 @@ export async function deletePatientType(id: string) {
     throw new Error("Failed to delete patient type");
   }
 }
+
+// return the total appointment ,pending appointment and reject appointment in this system
+export async function appointmentDashboard() {
+  try {
+    const totalAppointments = await prisma.appointment.count();
+    const pendingAppointments = await prisma.appointment.count({
+      where: { status: "pending" },
+    });
+    const rejectedAppointments = await prisma.appointment.count({
+      where: { status: "rejected" },
+    });
+
+    return {
+      total: totalAppointments,
+      pending: pendingAppointments,
+      rejected: rejectedAppointments,
+    };
+  } catch (error) {
+    console.error("Error fetching appointment dashboard data:", error);
+    throw new Error("Failed to fetch appointment dashboard data");
+  }
+}
