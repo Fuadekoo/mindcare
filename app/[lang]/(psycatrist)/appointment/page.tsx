@@ -9,8 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 import useAction from "@/hooks/useActions";
-import { Calendar } from "@heroui/react";
-import { parseDate } from "@internationalized/date";
+// import { Calendar } from "@heroui/react";
+// import { parseDate } from "@internationalized/date";
 import { getStudents } from "@/actions/psycatrist/students";
 import {
   changeAppointmentStatus,
@@ -73,7 +73,7 @@ function Page() {
 
   // --- Actions ---
   const handleActionCompletion = (
-    response: any,
+    response: unknown,
     successMessage: string,
     errorMessage: string
   ) => {

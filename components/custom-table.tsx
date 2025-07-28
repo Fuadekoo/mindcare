@@ -22,9 +22,9 @@ export interface ColumnDef<T> {
 
 interface CustomTableProps {
   rows: Array<
-    Record<string, any> & { key?: string | number; id?: string | number }
+    Record<string, string> & { key?: string | number; id?: string | number }
   >;
-  columns: Array<ColumnDef<Record<string, any>>>;
+  columns: Array<ColumnDef<Record<string, string>>>;
   totalRows: number;
   page: number;
   pageSize: number;
@@ -152,30 +152,30 @@ function CustomTable({
             </div>
             <div className="flex flex-col sm:flex-row items-start justify-center gap-2">
               <div className="flex-1">
-              <h3 className="text-sm font-medium text-gray-700 mb-2 text-center">
-                Start Date
-              </h3>
-              <Calendar
-                aria-label="Start Date"
-                value={localStartDate ? parseDate(localStartDate) : null}
-                onChange={(date) =>
-                setLocalStartDate(date ? date.toString() : "")
-                }
-                isDisabled={isLoading}
-              />
+                <h3 className="text-sm font-medium text-gray-700 mb-2 text-center">
+                  Start Date
+                </h3>
+                <Calendar
+                  aria-label="Start Date"
+                  value={localStartDate ? parseDate(localStartDate) : null}
+                  onChange={(date) =>
+                    setLocalStartDate(date ? date.toString() : "")
+                  }
+                  isDisabled={isLoading}
+                />
               </div>
               <div className="flex-1">
-              <h3 className="text-sm font-medium text-gray-700 mb-2 text-center">
-                End Date
-              </h3>
-              <Calendar
-                aria-label="End Date"
-                value={localEndDate ? parseDate(localEndDate) : null}
-                onChange={(date) =>
-                setLocalEndDate(date ? date.toString() : "")
-                }
-                isDisabled={isLoading}
-              />
+                <h3 className="text-sm font-medium text-gray-700 mb-2 text-center">
+                  End Date
+                </h3>
+                <Calendar
+                  aria-label="End Date"
+                  value={localEndDate ? parseDate(localEndDate) : null}
+                  onChange={(date) =>
+                    setLocalEndDate(date ? date.toString() : "")
+                  }
+                  isDisabled={isLoading}
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">

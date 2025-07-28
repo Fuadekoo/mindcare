@@ -24,14 +24,14 @@ type Student = {
   name: string;
   history: { id: string; solved: boolean }[];
   appointment: { id: string; status: string }[];
-  [key: string]: any;
+  // [key: string]: any;
 };
 
-type ColumnDef = {
+interface ColumnDef {
   key: string;
   label: string;
-  renderCell?: (item: Student) => React.ReactNode;
-};
+  renderCell?: (item: Record<string, string>) => React.ReactNode;
+}
 
 function Page() {
   const [page, setPage] = useState(1);
@@ -194,7 +194,7 @@ function Page() {
     },
     { key: "name", label: "Student Name" },
     { key: "wdt_ID", label: "ID" },
-    { key: "passcode", label: "Passcode" },
+    // { key: "passcode", label: "Passcode" },
     { key: "phoneno", label: "Phone No" },
     { key: "country", label: "Country" },
     { key: "status", label: "Status" },

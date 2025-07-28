@@ -165,11 +165,11 @@ function Page() {
     return Array.isArray(data)
       ? data.map((item) => ({
           id: item.id,
-          name: item.student.name,
+          name: item.student.name ?? "Unknown", // Ensure name is always a string
           problemType: item.patientData?.type ?? "Unknown",
           diagnosis: item.note ?? "empty", // Add diagnosis property
           date: new Date(item.createdAt).toLocaleDateString(),
-          status: item.solved ? "solved" : "pending",
+          status: item.solved ? "solved" as "solved" : "pending" as "pending",
         }))
       : [];
   }, [casesResponse]);
