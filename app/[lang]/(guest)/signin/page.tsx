@@ -4,14 +4,17 @@ import { useForm } from "react-hook-form";
 import { loginSchema } from "@/lib/zodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import useAction from "@/hooks/useActions";
-import { authenticate } from "@/actions/common/authentication";
+// import useAction from "@/hooks/useActions";
+// import { authenticate } from "@/actions/common/authentication";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/react";
-import Loading from "@/components/loading";
-import { addToast } from "@heroui/toast";
+// import Loading from "@/components/loading";
+import { Loader2 } from "lucide-react";
+// import { addToast } from "@heroui/toast";
 // import Link from "next/link";
 import Image from "next/image";
+import { signIn } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 function LoginPage() {
   const {
@@ -21,23 +24,23 @@ function LoginPage() {
   } = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
   });
-  const [, action, loading] = useAction(authenticate, [
-    ,
-    (response) => {
-      if (response) {
-        addToast({
-          title: "Login",
-          description: response.message,
-        });
-        // window.location.reload();
-      } else {
-        addToast({
-          title: "Login",
-          description: "Login successful!",
-        });
-      }
-    },
-  ]);
+  // const [, action, loading] = useAction(authenticate, [
+  //   ,
+  //   (response) => {
+  //     if (response) {
+  //       addToast({
+  //         title: "Login",
+  //         description: response.message,
+  //       });
+  //       // window.location.reload();
+  //     } else {
+  //       addToast({
+  //         title: "Login",
+  //         description: "Login successful!",
+  //       });
+  //     }
+  //   },
+  // ]);
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-primary-50">
@@ -55,7 +58,18 @@ function LoginPage() {
           <h1 className="text-2xl font-bold text-center text-primary-900">
             DARELKUBRA MINDCARE
           </h1>
-          <form onSubmit={handleSubmit(action)} className="space-y-5">
+          <form
+            onSubmit={handleSubmit(async (data) => {
+              try {
+                await signIn("credentials", { ...data, redirect: false });
+                console.log("Sign in successful");
+                redirect("/en/dashboard");
+              } catch (error) {
+                console.error("Error during form submission:", error);
+              }
+            })}
+            className="space-y-5"
+          >
             <div>
               <label
                 htmlFor="phone"
@@ -99,13 +113,13 @@ function LoginPage() {
               )}
             </div>
             <Button
-              isDisabled={loading}
+              // isDisabled={loading}
               color="primary"
               variant="solid"
               type="submit"
               className="w-full"
             >
-              {loading ? <Loading /> : "Login"}
+                {false ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : "Login"}
             </Button>
           </form>
         </div>
