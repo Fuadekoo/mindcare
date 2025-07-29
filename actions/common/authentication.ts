@@ -1,6 +1,5 @@
 "use server";
-import { auth } from "@/lib/auth";
-import { signIn, signOut } from "../../lib/auth";
+import { auth, signIn, signOut } from "@/lib/auth";
 import { z } from "zod";
 import { loginSchema } from "@/lib/zodSchema";
 import { redirect } from "next/navigation";
