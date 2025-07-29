@@ -54,7 +54,7 @@ export async function logout() {
   }
 }
 export async function checkAuthentication() {
-  const session = await signIn("credentials", { redirect: false });
+  const session = await auth();
   if (!session || !session.user) {
     redirect("/en/login");
   }
