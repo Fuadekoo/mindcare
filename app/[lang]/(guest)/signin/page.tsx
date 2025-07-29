@@ -13,7 +13,8 @@ import { Loader2 } from "lucide-react";
 // import { addToast } from "@heroui/toast";
 // import Link from "next/link";
 import Image from "next/image";
-import { signIn } from "@/lib/auth";
+// import { signIn } from "@/lib/auth";
+import { signIn } from "next-auth/react";
 import { redirect } from "next/navigation";
 
 function LoginPage() {
@@ -119,7 +120,11 @@ function LoginPage() {
               type="submit"
               className="w-full"
             >
-                {false ? <Loader2 className="animate-spin w-5 h-5 mx-auto" /> : "Login"}
+              {false ? (
+                <Loader2 className="animate-spin w-5 h-5 mx-auto" />
+              ) : (
+                "Login"
+              )}
             </Button>
           </form>
         </div>
