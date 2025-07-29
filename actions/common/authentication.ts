@@ -10,38 +10,21 @@ export async function authenticate(
   if (!data) return { message: "No data provided" };
   let result;
   try {
-    console.log("sign in with data", data);
-    result = await signIn("credentials", { ...data, redirect: false });
+    // console.log("sign in with data", data);
+    // result = await signIn("credentials", { ...data, redirect: false });
+    console.log("credentials >> ", data);
+    await signIn("credentials", {
+      phone: data.phone,
+      password: data.password,
+      redirect: false,
+    });
+    console.log("sign in successfully");
+    return { message: "Login successful" };
   } catch (error) {
     console.log("sign in failed", error);
     return { message: "Invalid credentials" };
   }
-  if (result && result.error) {
-    console.log("sign in failed", result.error);
-    return { message: "Invalid credentials" };
-  }
-  console.log("sign in successfully");
-  // Fetch user role and isBlocked from DB
-  //   const user = await prisma.user.findUnique({
-  //     where: { phone: data.phone },
-  //     select: { role: true, isBlocked: true },
-  //   });
-
-  // Deny login if user is blocked
-  //   if (user?.isBlocked) {
-  //     return { message: "Your account is blocked. Please contact support." };
-  //   }
-
-  // Redirect based on role
-  //   if (user?.role === "ADMIN") {
-  //     redirect("/en/admin/dashboard");
-  //   } else {
-  //     redirect("/en/customer/dashboard");
-  //   }
-
-  return { message: "Login successful" };
 }
-
 export async function logout() {
   try {
     await signOut({ redirect: false });
