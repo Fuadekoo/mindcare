@@ -136,10 +136,16 @@ function Page() {
   const [, actionStatus, isLoadingStatus] = useAction(changeCaseStatus, [
     ,
     (response) => {
-      if (!response) {
+      if (response) {
+        addToast({
+          title: "Success",
+          description: "Case status updated successfully.",
+        });
+        refreshCaseDetails();
+      } else {
         addToast({
           title: "Error",
-          description: "Failed to load case details.",
+          description: "Failed to update case status.",
         });
       }
     },
@@ -326,7 +332,10 @@ function Page() {
       diagnosisResponse?.map((item) => ({
         id: item.id,
         description: item.description,
-        createdAt: typeof item.createdAt === "string" ? item.createdAt : item.createdAt.toISOString(),
+        createdAt:
+          typeof item.createdAt === "string"
+            ? item.createdAt
+            : item.createdAt.toISOString(),
       })) || []
     );
   }, [diagnosisResponse]);
@@ -336,7 +345,10 @@ function Page() {
       observationResponse?.map((item) => ({
         id: item.id,
         description: item.description,
-        createdAt: typeof item.createdAt === "string" ? item.createdAt : item.createdAt.toISOString(),
+        createdAt:
+          typeof item.createdAt === "string"
+            ? item.createdAt
+            : item.createdAt.toISOString(),
       })) || []
     );
   }, [observationResponse]);
@@ -346,7 +358,10 @@ function Page() {
       treatmentResponse?.map((item) => ({
         id: item.id,
         description: item.description,
-        createdAt: typeof item.createdAt === "string" ? item.createdAt : item.createdAt.toISOString(),
+        createdAt:
+          typeof item.createdAt === "string"
+            ? item.createdAt
+            : item.createdAt.toISOString(),
       })) || []
     );
   }, [treatmentResponse]);
