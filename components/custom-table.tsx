@@ -67,6 +67,9 @@ function CustomTable({
   const [localStartDate, setLocalStartDate] = useState(startDate || "");
   const [localEndDate, setLocalEndDate] = useState(endDate || "");
 
+  // For search input local state
+  const [localSearch, setLocalSearch] = useState(searchValue);
+
   const handleApplyDateFilter = () => {
     if (onDateChange) {
       onDateChange({ startDate: localStartDate, endDate: localEndDate });
@@ -95,31 +98,50 @@ function CustomTable({
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
       {/* Search and page size */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-auto">
-            <Search
-              className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
-              aria-hidden="true"
-            />
+        <form
+          className="flex items-center gap-2 w-full sm:w-auto"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSearch(localSearch);
+          }}
+        >
+          <div className="relative w-full sm:w-auto flex">
+            <button
+              type="submit"
+              className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-l-lg px-3 transition-colors"
+              aria-label="Search"
+              style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+              disabled={isLoading}
+            >
+              <Search className="h-5 w-5" />
+            </button>
             <input
               type="text"
               placeholder="Search..."
-              value={searchValue}
-              onChange={(e) => onSearch(e.target.value)}
-              className="w-full sm:w-64 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              value={localSearch}
+              onChange={(e) => {
+                setLocalSearch(e.target.value);
+                if (e.target.value === "") {
+                  onSearch(""); // Refresh table when input is cleared
+                }
+              }}
+              className="w-full sm:w-64 p-2 pl-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
               disabled={isLoading}
             />
           </div>
           {enableDateFilter && (
             <button
+              type="button"
               onClick={() => setShowDateFilter(true)}
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100"
+              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100 ml-2"
               aria-label="Filter by date"
+              disabled={isLoading}
             >
               <Filter className="h-5 w-5 text-gray-600" />
             </button>
           )}
-        </div>
+        </form>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span>Rows per page:</span>
           <select

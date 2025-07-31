@@ -73,24 +73,35 @@ export const CustomCard: React.FC<CustomCardProps> = ({
     setPage(1);
   };
 
+  // For search button: set page to 1 when clicked
+  const handleSearchButton = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleFilterChange();
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
       {/* Filters and Search Section */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-        <div className="relative w-full sm:w-auto">
-          <Search
-            className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400"
-            aria-hidden="true"
-          />
+      <form
+        className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4"
+        onSubmit={handleSearchButton}
+      >
+        <div className="relative w-full sm:w-auto flex">
+          <button
+            type="submit"
+            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-l-lg px-3 transition-colors"
+            aria-label="Search"
+            style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+          >
+            <Search className="h-5 w-5" />
+          </button>
           <input
             type="text"
             placeholder="Search by name, problem..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              handleFilterChange();
-            }}
-            className="w-full sm:w-64 p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 p-2 pl-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
           />
         </div>
         <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -121,7 +132,7 @@ export const CustomCard: React.FC<CustomCardProps> = ({
             ))}
           </select>
         </div>
-      </div>
+      </form>
 
       {/* Cards Grid Section */}
       {paginatedPatients.length > 0 ? (
@@ -227,5 +238,3 @@ export const CustomCard: React.FC<CustomCardProps> = ({
     </div>
   );
 };
-
-
