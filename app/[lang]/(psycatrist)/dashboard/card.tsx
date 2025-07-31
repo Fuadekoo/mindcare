@@ -62,12 +62,12 @@ export default function DashboardCards() {
     },
     {
       title: "Pending Case",
-      value: dashboardData?.totalPendingStudents ?? 0,
+      value: dashboardData?.totalPendingHistory ?? 0,
       desc: "Pending case",
     },
     {
       title: "Solved Case",
-      value: dashboardData?.totalSolvedStudents ?? 0,
+      value: dashboardData?.totalSolvedHistory ?? 0,
       desc: "Solved case",
     },
   ];

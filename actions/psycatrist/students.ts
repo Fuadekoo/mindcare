@@ -11,18 +11,20 @@ export async function getStudents(
     page = page || 1;
     pageSize = pageSize || 10;
 
-    const where = search
-      ? {
-          OR: [
-            // If search is a number, match wdt_ID exactly
-            ...(Number.isFinite(Number(search))
-              ? [{ wdt_ID: Number(search) }]
-              : []),
-            { name: { contains: search } },
-            { ustaz: { contains: search } },
-          ],
-        }
-      : {};
+    const where = {
+      ...(search
+        ? {
+            OR: [
+              ...(Number.isFinite(Number(search))
+                ? [{ wdt_ID: Number(search) }]
+                : []),
+              { name: { contains: search } },
+              { ustaz: { contains: search } },
+            ],
+          }
+        : {}),
+      status: { in: ["Active", "Not yet"] }, // <-- Add this line
+    };
 
     const totalRows = await prisma.student.count({ where });
     const totalPages = Math.ceil(totalRows / pageSize);
@@ -88,6 +90,7 @@ export async function getStudents(
 export async function studentData() {
   try {
     const student = await prisma.student.findMany({
+      where: { status: { in: ["active", "Not yet"] } },
       select: { wdt_ID: true, name: true },
     });
     return student;

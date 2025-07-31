@@ -7,30 +7,30 @@ import { z } from "zod";
 export async function getDashboardCard() {
   const [
     totalHistory,
+    totalPendingHistory,
+    totalSolvedHistory,
     totalStudents,
     totalAppointments,
     totalPendingAppointments,
     totalSolvedAppointments,
-    totalPendingStudents,
-    totalSolvedStudents,
   ] = await Promise.all([
     prisma.history.count(),
-    prisma.student.count(),
+    prisma.history.count({ where: { solved: false } }),
+    prisma.history.count({ where: { solved: true } }),
+    prisma.student.count({ where: { status: { in: ["Active", "Not yet"] } } }),
     prisma.appointment.count(),
     prisma.appointment.count({ where: { status: "pending" } }),
     prisma.appointment.count({ where: { status: "solved" } }),
-    prisma.student.count({ where: { status: "pending" } }),
-    prisma.student.count({ where: { status: "solved" } }),
   ]);
 
   return {
     totalHistory,
+    totalPendingHistory,
+    totalSolvedHistory,
     totalStudents,
     totalAppointments,
     totalPendingAppointments,
     totalSolvedAppointments,
-    totalPendingStudents,
-    totalSolvedStudents,
   };
 }
 export async function getYear() {

@@ -11,12 +11,14 @@ export async function getTrack(
     const where = search
       ? {
           OR: [
-            // Try to parse search as a number for wdt_ID, otherwise skip
             ...(isNaN(Number(search)) ? [] : [{ wdt_ID: Number(search) }]),
             { name: { contains: search, mode: "insensitive" } },
           ],
+          status: { in: ["Active", "Not yet"] }, // <-- Add this line
         }
-      : {};
+      : {
+          status: { in: ["Active", "Not yet"] }, // <-- Add this line for no search
+        };
 
     // Get the total count of students matching the search for pagination
     const totalRows = await prisma.student.count({ where });

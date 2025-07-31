@@ -152,7 +152,7 @@ export async function deleteAppointment(id: string) {
 export async function studentName(id: number) {
   try {
     const student = await prisma.student.findUnique({
-      where: { wdt_ID: id },
+      where: { wdt_ID: id, status: { in: ["Active", "Not yet"] } },
       select: { wdt_ID: true, name: true },
     });
     return student;
