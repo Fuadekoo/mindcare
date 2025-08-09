@@ -42,11 +42,8 @@ export async function getAppointments(
       where,
       select: {
         id: true,
-        student: {
-          select: {
-            wdt_ID: true,
-            name: true,
-          },
+        case: {
+          include: { student: { select: { wdt_ID: true, name: true } } },
         },
         date: true,
         time: true,
@@ -75,12 +72,12 @@ export async function getAppointments(
 }
 
 export async function createAppointment(data: {
-  studentId: number;
+  caseId: string;
   date: Date;
   time: string;
 }) {
   const schema = z.object({
-    studentId: z.number().min(1, "Student ID is required"),
+    caseId: z.string().min(1, "Case ID is required"),
     date: z.date(),
     time: z.string().min(1, "Time is required"),
   });
@@ -94,7 +91,7 @@ export async function createAppointment(data: {
   try {
     await prisma.appointment.create({
       data: {
-        studentId: parsedData.data.studentId,
+        caseId: parsedData.data.caseId,
         date: parsedData.data.date,
         time: parsedData.data.time,
       },
@@ -109,13 +106,13 @@ export async function createAppointment(data: {
 export async function updateAppointment(
   id: string,
   data: {
-    studentId?: number;
+    caseId?: string;
     date?: Date;
     time?: string;
   }
 ) {
   const schema = z.object({
-    studentId: z.number().optional(),
+    caseId: z.string().optional(),
     date: z.date().optional(),
     time: z.string().optional(),
   });
@@ -187,10 +184,10 @@ export async function changeAppointmentStatus(id: string) {
   }
 }
 
-export async function getAppointmentPerStudent(id: number) {
+export async function getAppointmentPerStudent(StudentId: number) {
   try {
     const appointments = await prisma.appointment.findMany({
-      where: { studentId: id, status: "pending" },
+      where: { case: { student: { wdt_ID: StudentId } }, status: "pending" },
       select: {
         id: true,
         date: true,
@@ -212,11 +209,8 @@ export async function getAppointmentById(id: string) {
       where: { id },
       select: {
         id: true,
-        student: {
-          select: {
-            wdt_ID: true,
-            name: true,
-          },
+        case: {
+          include: { student: { select: { name: true, wdt_ID: true } } },
         },
         date: true,
         time: true,
@@ -263,11 +257,8 @@ export async function getTodayAppointments(page?: number, pageSize?: number) {
       where,
       select: {
         id: true,
-        student: {
-          select: {
-            wdt_ID: true,
-            name: true,
-          },
+        case: {
+          include: { student: { select: { wdt_ID: true, name: true } } },
         },
         date: true,
         time: true,

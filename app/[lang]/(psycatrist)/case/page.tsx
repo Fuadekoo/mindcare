@@ -18,21 +18,6 @@ import {
 import { getStudents } from "@/actions/psycatrist/students";
 import { caseSchema } from "@/lib/zodSchema";
 
-// type PatientCase = {
-//   id: string;
-//   name: string;
-//   problemType: string;
-//   status: "solved" | "pending";
-//   date: string;
-//   note: string;
-// };
-
-// Type for problem type data for the dropdown
-// type ProblemType = {
-//   id: string;
-//   type: string;
-// };
-
 // Type for student data for the dropdown
 type StudentOption = {
   value: number;
@@ -152,7 +137,12 @@ function Page() {
   };
 
   const onSubmit = async (data: z.infer<typeof caseSchema>) => {
-    await createAction(data.studentId, data.problemTypeId, data.note);
+    await createAction(
+      data.studentGeneralCaseId,
+      data.studentId,
+      data.problemTypeId,
+      data.note
+    );
     addToast({ title: "Success", description: "New case has been added." });
     setShowModal(false);
     reset();

@@ -29,6 +29,7 @@ export async function getCaseCard(
       where,
       select: {
         id: true,
+        StudentGeneralCase: { select: { id: true, status: true } },
         student: { select: { wdt_ID: true, name: true } },
         historyCode: true,
         patientData: { select: { type: true } },
@@ -58,14 +59,25 @@ export async function getCaseCard(
 }
 
 export async function createCaseCard(
+  studentGeneralCaseId: string,
   studentId: number,
   patientTypeData: string,
   note?: string
 ) {
   try {
+    // Before creating a new history for a student:
+    const maxPriority = await prisma.history.aggregate({
+      where: { studentId: studentId },
+      _max: { priority: true },
+    });
+
+    const nextPriority = (maxPriority._max.priority ?? 0) + 1;
+
     await prisma.history.create({
       data: {
+        priority: nextPriority,
         studentId,
+        studentGeneralCaseId,
         patientTypeData,
         note,
       },
@@ -78,24 +90,26 @@ export async function createCaseCard(
 }
 
 export async function createCaseCard2(
+  studentGeneralCaseId: string,
   studentId: number,
   patientTypeData: string,
   note?: string
 ) {
   try {
+    const maxPriority = await prisma.history.aggregate({
+      where: { studentId: studentId },
+      _max: { priority: true },
+    });
+
+    const nextPriority = (maxPriority._max.priority ?? 0) + 1;
+
     await prisma.history.create({
       data: {
+        priority: nextPriority,
+        studentGeneralCaseId,
         note,
-        student: {
-          connect: {
-            wdt_ID: studentId,
-          },
-        },
-        patientData: {
-          connect: {
-            id: patientTypeData,
-          },
-        },
+        studentId: studentId,
+        patientTypeData: patientTypeData,
       },
     });
     return { message: "Case card created successfully" };

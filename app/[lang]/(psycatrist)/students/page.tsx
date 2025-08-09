@@ -4,6 +4,10 @@ import Link from "next/link";
 import CustomTable from "@/components/custom-table";
 import useAction from "@/hooks/useActions";
 import { getStudents } from "@/actions/psycatrist/students";
+import {
+  createGeneralCase,
+  updateGeneralCase,
+} from "@/actions/psycatrist/generalCase";
 import { createCaseCard2, patientTypeData } from "@/actions/psycatrist/case";
 import {
   createAppointment,
@@ -16,23 +20,30 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { caseSchema, appointmentSchema } from "@/lib/zodSchema";
+import {
+  caseSchema,
+  appointmentSchema,
+  generalCaseSchema,
+} from "@/lib/zodSchema";
 
 type Student = {
   key: string;
   id: number;
   name: string;
-  history: { id: string; solved: boolean }[];
+  StudentGeneralCase: { id: string; status: string }[];
+  history: {
+    id: string;
+    solved: boolean;
+    appointment: { id: string; status: string }[];
+  }[];
+  // help me plase i went to define appointment type from the history
   appointment: { id: string; status: string }[];
-  // Add other properties that exist in your data
-  wdt_ID?: string;
+  wdt_ID?: number;
   phoneno?: string;
   country?: string;
   status?: string;
-  // [key: string]: any; // Uncomment if you need dynamic properties
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ColumnDef<T = any> {
   key: string;
   label: string;
@@ -46,6 +57,7 @@ function Page() {
   const [search, setSearch] = useState("");
 
   // --- Modal State ---
+  const [showGeneralCaseModal, setShowGeneralCaseModal] = useState(false);
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showAppointmentDetailModal, setShowAppointmentDetailModal] =
@@ -58,7 +70,12 @@ function Page() {
   // --- Data Fetching ---
   const [studentsResponse, refreshStudents, isLoading] = useAction(
     getStudents,
-    [true, () => {}],
+    [
+      true,
+      (data) => {
+        console.log("Students data fetched:>>>>>", data);
+      },
+    ],
     search,
     page,
     pageSize
@@ -101,6 +118,15 @@ function Page() {
     }
   };
 
+  const [, createGeneralCaseAction, isCreatingGeneralCase] = useAction(
+    createGeneralCase,
+    [
+      ,
+      (res) =>
+        handleActionCompletion(res, "General case created successfully."),
+    ]
+  );
+
   const [, createAppointmentAction, isCreatingAppointment] = useAction(
     createAppointment,
     [
@@ -130,6 +156,10 @@ function Page() {
     resolver: zodResolver(appointmentSchema),
   });
 
+  const generalCaseForm = useForm<z.infer<typeof generalCaseSchema>>({
+    resolver: zodResolver(generalCaseSchema),
+  });
+
   // --- Event Handlers ---
   const handleOpenCaseModal = (student: Student) => {
     setSelectedStudent(student);
@@ -138,10 +168,26 @@ function Page() {
     setShowCaseModal(true);
   };
 
+  const handleOpenGeneralCaseModal = (student: Student) => {
+    setSelectedStudent(student);
+    generalCaseForm.reset();
+    generalCaseForm.setValue("studentId", student.id ? Number(student.id) : 0);
+    setShowGeneralCaseModal(true);
+  };
+
   const handleOpenAppointmentModal = (student: Student) => {
     setSelectedStudent(student);
     appointmentForm.reset();
-    appointmentForm.setValue("studentId", Number(student.id));
+    appointmentForm.setValue(
+      "caseId",
+      Array.isArray(student.StudentGeneralCase)
+        ? student.StudentGeneralCase[0]?.id || ""
+        : student.StudentGeneralCase &&
+          typeof student.StudentGeneralCase === "object" &&
+          "id" in student.StudentGeneralCase
+        ? (student.StudentGeneralCase as { id: string }).id
+        : ""
+    );
     setShowAppointmentModal(true);
   };
 
@@ -154,10 +200,6 @@ function Page() {
     setShowAppointmentDetailModal(false);
     setSelectedAppointmentId(null);
   };
-  // const handleCloseAppointmentDetailModal = () => {
-  //   setShowAppointmentDetailModal(false);
-  //   setSelectedAppointmentId(null);
-  // };
 
   const handleChangeAppointmentStatus = async (
     status: "rejected" | "confirmed"
@@ -170,7 +212,18 @@ function Page() {
   };
 
   const onCaseSubmit = async (data: z.infer<typeof caseSchema>) => {
-    await createCaseAction(data.studentId, data.problemTypeId, data.note);
+    await createCaseAction(
+      data.studentGeneralCaseId,
+      data.studentId,
+      data.problemTypeId,
+      data.note
+    );
+  };
+
+  const onGeneralCaseSubmit = async (
+    data: z.infer<typeof generalCaseSchema>
+  ) => {
+    await createGeneralCaseAction(data.studentId);
   };
 
   const onAppointmentSubmit = async (
@@ -180,12 +233,10 @@ function Page() {
   };
 
   // --- Table Rows & Columns ---
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rows: Student[] =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (studentsResponse?.data || []).map((student: any) => ({
       key: String(student.wdt_ID),
-      id: String(student.wdt_ID),
+      id: student.wdt_ID,
       ...student,
     })) || [];
 
@@ -199,36 +250,25 @@ function Page() {
       phoneno,
       country,
       status,
+      StudentGeneralCase,
       history,
-      appointment,
     } = student;
     return {
       key: key,
-      id: String(id),
+      id: Number(id),
       name: name ?? "",
-      wdt_ID: wdt_ID ?? "",
+      wdt_ID: wdt_ID ?? 0,
       phoneno: phoneno ?? "",
       country: country ?? "",
       status: status ?? "",
-      history: history && Array.isArray(history) ? JSON.stringify(history) : "",
-      appointment:
-        appointment && Array.isArray(appointment)
-          ? JSON.stringify(appointment)
-          : "",
+      StudentGeneralCase: Array.isArray(StudentGeneralCase)
+        ? StudentGeneralCase
+        : StudentGeneralCase
+        ? [StudentGeneralCase]
+        : [],
+      history: history,
     };
   });
-
-  // const adaptStudentForTable = (student: any): Student => ({
-  //   key: String(student.wdt_ID),
-  //   id: student.wdt_ID,
-  //   name: student.name || "",
-  //   history: student.history || [],
-  //   appointment: student.appointment || [],
-  //   wdt_ID: student.wdt_ID ? String(student.wdt_ID) : undefined,
-  //   phoneno: student.phoneno || undefined,
-  //   country: student.country || undefined,
-  //   status: student.status || undefined,
-  // });
 
   const columns: ColumnDef[] = [
     {
@@ -245,49 +285,70 @@ function Page() {
     },
     { key: "name", label: "Student Name" },
     { key: "wdt_ID", label: "ID" },
-    // { key: "passcode", label: "Passcode" },
     { key: "phoneno", label: "Phone No" },
     { key: "country", label: "Country" },
     { key: "status", label: "Status" },
+    {
+      key: "StudentGeneralCase",
+      label: "General Case",
+      renderCell: (item: Student) => {
+        if (!item.StudentGeneralCase || item.StudentGeneralCase.length === 0) {
+          return <span className="text-gray-500">no case</span>;
+        }
+        return (
+          <div className="flex gap-2">
+            {item.StudentGeneralCase.map((caseItem, idx) => (
+              <span
+                key={caseItem.id}
+                className={`text-sm font-semibold px-3 py-1 rounded-md ${
+                  caseItem.status === "open"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-green-100 text-green-700"
+                }`}
+              >
+                {`D${idx + 1}`}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
     {
       key: "history",
       label: "Case List",
       renderCell: (item: Student) => {
         if (!item.history || item.history.length === 0) {
-          console.log("here", item.history);
           return <span className="text-gray-500">no flow up</span>;
         } else {
-          console.log("here >> ", JSON.parse(JSON.stringify(item.history)));
+          let historyArr: { id: string; solved: boolean }[] = [];
+          try {
+            historyArr =
+              typeof item.history === "string"
+                ? JSON.parse(item.history)
+                : Array.isArray(item.history)
+                ? item.history
+                : [];
+          } catch {
+            historyArr = [];
+          }
           return (
             <div className="grid grid-cols-4 gap-9">
-              {(() => {
-                let historyArr: { id: string; solved: boolean }[] = [];
-                try {
-                  historyArr = typeof item.history === "string"
-                    ? JSON.parse(item.history)
-                    : Array.isArray(item.history)
-                    ? item.history
-                    : [];
-                } catch {
-                  historyArr = [];
-                }
-                return historyArr.map((caseItem, index) => {
-                  const isSolved = caseItem.solved;
-                  const linkClass = isSolved
-                    ? "text-sm text-green-600 hover:underline hover:text-green-800 bg-green-100  pl-2 pr-5 py-1 rounded-md"
-                    : "text-sm text-red-600 hover:underline hover:text-red-800 bg-red-100 pl-2 pr-5  py-1 rounded-md";
+              {historyArr.map((caseItem, index) => {
+                const isSolved = caseItem.solved;
+                const linkClass = isSolved
+                  ? "text-sm text-green-600 hover:underline hover:text-green-800 bg-green-100  pl-2 pr-5 py-1 rounded-md"
+                  : "text-sm text-red-600 hover:underline hover:text-red-800 bg-red-100 pl-2 pr-5  py-1 rounded-md";
 
-                  return (
-                    <Link
-                      key={caseItem.id}
-                      href={`/en/case/${caseItem.id}`}
-                      className={linkClass}
-                    >
-                      {`C${index + 1}`}
-                    </Link>
-                  );
-                });
-              })()}
+                return (
+                  <Link
+                    key={caseItem.id}
+                    href={`/en/case/${caseItem.id}`}
+                    className={linkClass}
+                  >
+                    {`C${index + 1}`}
+                  </Link>
+                );
+              })}
             </div>
           );
         }
@@ -297,33 +358,31 @@ function Page() {
       key: "appointment",
       label: "Appointment List",
       renderCell: (item: Student) => {
-        if (!item.appointment || item.appointment.length === 0) {
+        console.log("Appointment fetched:", item.history);
+
+        const appointmentArr = item.history.reduce(
+          (acc, cc) => [...acc, ...cc.appointment],
+          [] as {
+            id: string;
+            status: string;
+          }[]
+        );
+
+        if (appointmentArr.length === 0) {
           return <span className="text-gray-500">no appointment</span>;
         }
+
         return (
           <div className="flex flex-wrap gap-2 items-center">
-            {(() => {
-              let appointmentArr: { id: string; status: string }[] = [];
-              try {
-                appointmentArr = typeof item.appointment === "string"
-                  ? JSON.parse(item.appointment)
-                  : Array.isArray(item.appointment)
-                  ? item.appointment
-                  : [];
-              } catch {
-                appointmentArr = [];
-              }
-              return appointmentArr.map((appt, index) => (
-                <button
-                  key={appt.id}
-                  onMouseEnter={() => setData(appt.id)}
-                  onClick={() => handleOpenAppointmentDetailModal(appt.id)}
-                  className="text-sm text-blue-600 hover:underline hover:text-blue-800 bg-blue-100 px-2 py-1 rounded-md"
-                >
-                  {`P${index + 1}`}
-                </button>
-              ));
-            })()}
+            {appointmentArr.map((appt, idx) => (
+              <button
+                key={appt.id}
+                onClick={() => handleOpenAppointmentDetailModal(appt.id)}
+                className="text-sm text-blue-600 hover:underline hover:text-blue-800 bg-blue-100 px-2 py-1 rounded-md"
+              >
+                {`P${idx + 1}`}
+              </button>
+            ))}
           </div>
         );
       },
@@ -333,6 +392,14 @@ function Page() {
       label: "Actions",
       renderCell: (item) => (
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            color="primary"
+            variant="flat"
+            onPress={() => handleOpenGeneralCaseModal(item)}
+          >
+            Add generalCase
+          </Button>
           <Button
             size="sm"
             color="primary"
@@ -388,6 +455,49 @@ function Page() {
         }}
         isLoading={isLoading}
       />
+
+      {/* Add General Case Modal */}
+      {/* {showGeneralCaseModal && selectedStudent && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md"></div>
+        </div>
+      )} */}
+      {/* Add General Case Modal */}
+      {showGeneralCaseModal && selectedStudent && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">
+              Add General Case for {selectedStudent.name}
+            </h2>
+            <div className="flex flex-col gap-4">
+              <Button
+                color="primary"
+                isLoading={isCreatingGeneralCase}
+                disabled={isCreatingGeneralCase}
+                onPress={async () => {
+                  const res = await createGeneralCaseAction(selectedStudent.id);
+                  // Optionally handle response here if you want to display it
+                }}
+              >
+                {isCreatingGeneralCase && (
+                  <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
+                )}
+                Create General Case
+              </Button>
+              <Button
+                variant="ghost"
+                type="button"
+                onPress={() => setShowGeneralCaseModal(false)}
+                disabled={isCreatingGeneralCase}
+              >
+                Cancel
+              </Button>
+              {/* Optionally display response message */}
+              {/* You can add a state to store the last response and show it here if needed */}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Case Modal */}
       {showCaseModal && selectedStudent && (
@@ -551,7 +661,7 @@ function Page() {
               <div className="space-y-3 text-sm">
                 <p>
                   <strong>Student:</strong>{" "}
-                  {appointmentDetailResponse.student.name}
+                  {appointmentDetailResponse.case?.student.name}
                 </p>
                 <p>
                   <strong>Date:</strong>{" "}

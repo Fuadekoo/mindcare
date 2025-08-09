@@ -44,24 +44,27 @@ export async function getStudents(
         package: true,
         chat_id: true,
         u_control: true,
-        history: {
-          // where: { solved: false },
-          select: {
-            id: true,
-            solved: true,
-          },
-          orderBy: {
-            createdAt: "desc", // Order by date to easily find the last visit
-          },
-        },
-        appointment: {
-          where: { status: "pending" },
+        StudentGeneralCase: {
+          // where: { status: "open" },
           select: {
             id: true,
             status: true,
           },
+          // orderBy: {
+          //   createdAt: "desc", // Order by date to easily find the last case
+          // },
+        },
+        history: {
+          select: {
+            id: true,
+            solved: true,
+            appointment: {
+              select: { id: true, status: true },
+              orderBy: { createdAt: "asc" },
+            },
+          },
           orderBy: {
-            createdAt: "desc", // Order by date to easily find the last appointment
+            createdAt: "asc", // Order by date to easily find the last visit
           },
         },
       },
@@ -70,8 +73,21 @@ export async function getStudents(
       take: pageSize,
     });
 
+    const adaptedData = data.map((student) => ({
+      ...student,
+      // Flatten all appointments from all histories into a top-level appointment array
+      appointment: (student.history || []).flatMap((h) => h.appointment || []),
+      // Optionally, always make StudentGeneralCase an array for frontend consistency
+      StudentGeneralCase: student.StudentGeneralCase
+        ? [student.StudentGeneralCase]
+        : [],
+    }));
+
+    console.log("Students fetched:", data);
+    console.table(data.map((item) => item.history.map((h) => h.appointment)));
+
     return {
-      data,
+      data: adaptedData,
       pagination: {
         currentPage: page,
         totalPages: totalPages,

@@ -27,7 +27,7 @@ async function main() {
 
   // 2. Create Users
   const user1hashed = bcrypt.hashSync("admin123", 10);
-  const user1 = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { phone: "910737199" },
     update: {},
     create: {
@@ -78,32 +78,29 @@ async function main() {
   });
   console.log("Students seeded.");
 
-  // 4. Create Appointments
-  await prisma.appointment.create({
+  // 4. Create StudentGeneralCase for each student
+  const case1 = await prisma.studentGeneralCase.create({
     data: {
       studentId: student1.wdt_ID,
-      date: new Date("2024-07-20T10:00:00Z"),
-      time: "10:00",
-      status: "confirmed",
+      status: "open",
     },
   });
 
-  await prisma.appointment.create({
+  const case2 = await prisma.studentGeneralCase.create({
     data: {
       studentId: student2.wdt_ID,
-      date: new Date("2024-07-21T14:00:00Z"),
-      time: "14:00",
-      status: "pending",
+      status: "open",
     },
   });
-  console.log("Appointments seeded.");
 
-  // 5. Create History with related Diagnosis, Observation, and Treatment
+  // 5. Create History for each case (with unique priority per student)
   const history1 = await prisma.history.create({
     data: {
       studentId: student1.wdt_ID,
+      studentGeneralCaseId: case1.id,
       patientTypeData: patientTypeAdult.id,
       solved: true,
+      priority: 1,
       diagnosis: {
         create: { description: "Generalized Anxiety Disorder" },
       },
@@ -120,9 +117,30 @@ async function main() {
 
   const history2 = await prisma.history.create({
     data: {
+      studentId: student1.wdt_ID,
+      studentGeneralCaseId: case1.id,
+      patientTypeData: patientTypeAdult.id,
+      solved: false,
+      priority: 2,
+      diagnosis: {
+        create: { description: "Mild Depression" },
+      },
+      observation: {
+        create: { description: "Low mood, lack of motivation." },
+      },
+      treatment: {
+        create: { description: "Cognitive behavioral therapy." },
+      },
+    },
+  });
+
+  const history3 = await prisma.history.create({
+    data: {
       studentId: student2.wdt_ID,
+      studentGeneralCaseId: case2.id,
       patientTypeData: patientTypeChild.id,
       solved: false,
+      priority: 1,
       diagnosis: {
         create: {
           description: "Attention-Deficit/Hyperactivity Disorder (ADHD)",
@@ -140,9 +158,49 @@ async function main() {
       },
     },
   });
+
+  const history4 = await prisma.history.create({
+    data: {
+      studentId: student2.wdt_ID,
+      studentGeneralCaseId: case2.id,
+      patientTypeData: patientTypeChild.id,
+      solved: true,
+      priority: 2,
+      diagnosis: {
+        create: { description: "Mild Anxiety" },
+      },
+      observation: {
+        create: { description: "Occasional nervousness in class." },
+      },
+      treatment: {
+        create: { description: "Relaxation techniques and parent counseling." },
+      },
+    },
+  });
+
   console.log("Histories with details seeded.");
 
-  // 6. Create Progress Tracking
+  // 6. Create Appointments linked to history (case)
+  await prisma.appointment.create({
+    data: {
+      caseId: history1.historyCode,
+      date: new Date("2024-07-20T10:00:00Z"),
+      time: "10:00",
+      status: "confirmed",
+    },
+  });
+
+  await prisma.appointment.create({
+    data: {
+      caseId: history3.historyCode,
+      date: new Date("2024-07-21T14:00:00Z"),
+      time: "14:00",
+      status: "pending",
+    },
+  });
+  console.log("Appointments seeded.");
+
+  // 7. Create Progress Tracking
   await prisma.progressTracking.create({
     data: {
       studentId: student1.wdt_ID,
@@ -158,7 +216,7 @@ async function main() {
   });
   console.log("Progress tracking seeded.");
 
-  // 7. Create Todo List
+  // 8. Create Todo List
   await prisma.todoList.create({
     data: {
       note: "Prepare lesson plan for Ahmad's next session.",

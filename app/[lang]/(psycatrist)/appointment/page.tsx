@@ -65,7 +65,7 @@ function Page() {
   } = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      studentId: undefined,
+      caseId: undefined,
       date: "",
       time: "",
     },
@@ -178,7 +178,7 @@ function Page() {
 
   const handleEdit = (item: AppointmentRow) => {
     setEditItem(item);
-    setValue("studentId", Number(item.student_wdt_ID));
+    setValue("caseId", item.caseId);
     setValue("date", item.date.split("T")[0]);
     setValue("time", item.time);
     setShowModal(true);
@@ -217,8 +217,9 @@ function Page() {
     (appointmentsResponse?.data || []).map((item) => ({
       key: String(item.id),
       id: String(item.id),
-      student_wdt_ID: item.student?.wdt_ID ? String(item.student.wdt_ID) : "",
-      student_name: item.student?.name ?? "",
+      caseId: item.case,
+      // student_wdt_ID: item.student?.wdt_ID ? String(item.student.wdt_ID) : "",
+      // student_name: item.student?.name ?? "",
       date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
       time: item.time ?? "",
       status: item.status ?? "",
@@ -380,7 +381,7 @@ function Page() {
               <div className="flex flex-col gap-4">
                 <div>
                   <Controller
-                    name="studentId"
+                    name="caseId"
                     control={control}
                     render={({ field }) => (
                       <Select
@@ -406,15 +407,13 @@ function Page() {
                           control: (base) => ({
                             ...base,
                             borderRadius: "0.5rem",
-                            borderColor: errors.studentId
-                              ? "#ef4444"
-                              : "#d1d5db",
+                            borderColor: errors.caseId ? "#ef4444" : "#d1d5db",
                             "&:hover": {
-                              borderColor: errors.studentId
+                              borderColor: errors.caseId
                                 ? "#ef4444"
                                 : "#8b5cf6",
                             },
-                            boxShadow: errors.studentId
+                            boxShadow: errors.caseId
                               ? "0 0 0 1px #ef4444"
                               : "none",
                             minHeight: "42px",
@@ -432,9 +431,9 @@ function Page() {
                       />
                     )}
                   />
-                  {errors.studentId && (
+                  {errors.caseId && (
                     <span className="text-red-500 text-xs mt-1">
-                      {errors.studentId.message}
+                      {errors.caseId.message}
                     </span>
                   )}
                 </div>

@@ -24,7 +24,15 @@ export const taskSchema = z.object({
 });
 export type TaskType = z.infer<typeof taskSchema>;
 
+export const generalCaseSchema = z.object({
+  studentId: z.number(),
+});
+export type GeneralCaseType = z.infer<typeof generalCaseSchema>;
+
 export const caseSchema = z.object({
+  studentGeneralCaseId: z
+    .string()
+    .min(1, "Student general case ID is required."),
   studentId: z.number(),
   problemTypeId: z.string().min(3, "Problem type is required."),
   note: z.string().optional(),
@@ -33,8 +41,7 @@ export type CaseType = z.infer<typeof caseSchema>;
 
 // This schema is used for appointment creation and updates
 export const appointmentSchema = z.object({
-  studentId: z.number(),
-  // .min(1, "Student ID is required."),
+  caseId: z.string().min(1, "Case ID is required."),
   date: z.string().min(1, "Date is required."),
   time: z.string().min(1, "Time is required."),
 });

@@ -19,29 +19,30 @@ model user {
 }
 
 model student {
-  wdt_ID           Int                @id @default(autoincrement())
-  name             String?
-  passcode         String?            @unique
-  phoneno          String?            @unique
-  country          String?
-  status           String?
-  isKid            Boolean?           @default(false)
-  ustaz            String?
-  subject          String?
-  package          String?
-  youtubeSubject   String?
-  chat_id          String?            @default("")
-  u_control        String?            @db.VarChar(255)
-  appointment      appointment[]
-  history          history[]
-  progressTracking progressTracking[]
+  wdt_ID               Int                 @id @default(autoincrement())
+  name                 String?
+  passcode             String?             @unique
+  phoneno              String?             @unique
+  country              String?
+  status               String?
+  isKid                Boolean?            @default(false)
+  ustaz                String?
+  subject              String?
+  package              String?
+  youtubeSubject       String?
+  chat_id              String?             @default("")
+  u_control            String?             @db.VarChar(255)
+  progressTracking     progressTracking[]
+  StudentGeneralCase   StudentGeneralCase?
+  studentGeneralCaseId String?
+  history              history[]
 
   @@map("wpos_wpdatatable_23")
 }
 
 model appointment {
   id        String   @id @default(cuid())
-  studentId Int
+  // studentId Int
   date      DateTime
   time      String
   status    String   @default("pending")
@@ -49,26 +50,40 @@ model appointment {
   case      history? @relation(fields: [caseId], references: [historyCode])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  student   student  @relation(fields: [studentId], references: [wdt_ID])
+}
+
+model StudentGeneralCase {
+  id        String    @id @default(cuid())
+  studentId Int       @unique
+  status    String    @default("open")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  student   student   @relation(fields: [studentId], references: [wdt_ID])
+  history   history[]
 }
 
 // history model (it has a diagonistic,obervation, and treatmentor medication)
 
 model history {
-  id              String        @id @default(cuid())
-  studentId       Int
-  historyCode     String        @unique @default(cuid())
-  patientTypeData String
-  note            String?
-  solved          Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  student         student       @relation(fields: [studentId], references: [wdt_ID])
-  patientData     patientType   @relation(fields: [patientTypeData], references: [id])
-  diagnosis       diagnosis[]
-  observation     observation[]
-  treatment       treatment[]
-  appointment     appointment[]
+  id                   String             @id @default(cuid())
+  studentId            Int
+  student              student            @relation(fields: [studentId], references: [wdt_ID])
+  historyCode          String             @unique @default(cuid())
+  patientTypeData      String
+  note                 String?
+  solved               Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  patientData          patientType        @relation(fields: [patientTypeData], references: [id])
+  diagnosis            diagnosis[]
+  observation          observation[]
+  treatment            treatment[]
+  appointment          appointment[]
+  StudentGeneralCase   StudentGeneralCase @relation(fields: [studentGeneralCaseId], references: [id])
+  studentGeneralCaseId String
+  priority             Int    
+
+  @@unique([studentId, priority])
 }
 
 model diagnosis {
