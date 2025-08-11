@@ -24,6 +24,7 @@ type Patient = {
   problemType: string;
   diagnosis: string;
   date: string;
+  priority: number;
   status: boolean;
 };
 
@@ -157,6 +158,10 @@ export const CustomCard: React.FC<CustomCardProps> = ({
                 <p className="text-sm text-gray-600 mb-1">
                   <span className="font-medium text-gray-700">Date:</span>{" "}
                   {patient.date}
+                </p>
+                <p className="text-sm text-gray-600 mb-1">
+                  <span className="font-medium text-gray-700">Priority:</span>{" "}
+                  {patient.priority}
                 </p>
               </div>
               <div className="flex justify-between items-center mt-3">

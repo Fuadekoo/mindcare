@@ -164,6 +164,7 @@ function Page() {
           problemType: item.patientData?.type ?? "Unknown",
           diagnosis: item.note ?? "empty", // Add diagnosis property
           date: new Date(item.createdAt).toLocaleDateString(),
+          priority: item.priority,
           status: item.solved,
         }))
       : [];

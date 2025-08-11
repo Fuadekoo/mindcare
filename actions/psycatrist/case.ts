@@ -351,3 +351,62 @@ export async function rejectOldPendingAppointments() {
     return { success: false, error: "Failed to process appointments." };
   }
 }
+
+// i went the last update of the case from the history,observation and treatment get the createat then the recent one
+export async function lastCaseUpdate(caseId: string) {
+  try {
+    // Get updatedAt from history
+    const history = await prisma.history.findUnique({
+      where: { id: caseId },
+      select: { updatedAt: true },
+    });
+
+    // Get latest createdAt from observation
+    const observation = await prisma.observation.findFirst({
+      where: { historyId: caseId },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+
+    // Get latest createdAt from treatment
+    const treatment = await prisma.treatment.findFirst({
+      where: { historyId: caseId },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+
+    const dates = [
+      history?.updatedAt,
+      observation?.createdAt,
+      treatment?.createdAt,
+    ].filter(Boolean) as Date[];
+
+    if (dates.length === 0) return null;
+
+    // Find the date closest to the current time
+    const now = new Date();
+    let closestDate = dates[0];
+    let minDiff = Math.abs(now.getTime() - closestDate.getTime());
+
+    for (const date of dates) {
+      const diff = Math.abs(now.getTime() - date.getTime());
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestDate = date;
+      }
+    }
+
+    console.log("Last case update date:", closestDate);
+    return closestDate;
+
+    // if (dates.length === 0) return null;
+
+    // Return the most recent date
+    // const update = new Date(Math.max(...dates.map((date) => date.getTime())));
+    // console.log("Last case update date:", update);
+    // return update;
+  } catch (error) {
+    console.error("Error fetching last case update:", error);
+    return null;
+  }
+}

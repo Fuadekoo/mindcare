@@ -19,7 +19,7 @@ const menu = [
   { label: "Track", url: "/track", icon: <Activity /> },
   { label: "Appointment", url: "/appointment", icon: <Calendar /> },
   { label: "Task", url: "/task", icon: <CheckSquare /> },
-  { label: "Case", url: "/case", icon: <CastIcon /> },
+  { label: "General Case", url: "/generalCase", icon: <CastIcon /> },
   //   { label: "Notifications", url: "/notification", icon: <Bell /> },
   { label: "Profile", url: "/profile", icon: <User /> },
   { label: "Settings", url: "/settings", icon: <Settings /> },

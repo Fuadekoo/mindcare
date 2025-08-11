@@ -18,6 +18,7 @@ import {
   getallDiagnosisPerCase,
   getallObservationPerCase,
   getallTreatmentPerCase,
+  lastCaseUpdate,
 } from "@/actions/psycatrist/case";
 
 type SectionItem = {
@@ -326,6 +327,23 @@ function Page() {
     ]
   );
 
+  const [lastUpdate, refreshLastUpdate, isLoadingLastUpdate] = useAction(
+    lastCaseUpdate,
+    [
+      true,
+      (response) => {
+        if (!response) {
+          addToast({
+            title: "Error",
+            description: "Failed to load last update.",
+          });
+        }
+      },
+    ],
+    caseId as string
+  );
+  console.log("Last update:>>>", lastUpdate);
+
   // Memoized data transformation
   const diagnosesItems = useMemo(() => {
     return (
@@ -381,11 +399,28 @@ function Page() {
         <h1 className="text-2xl font-bold text-primary-800 tracking-tight">
           Case Details
         </h1>
-        <span className="ml-auto text-sm text-primary-400 font-medium">
-          last updated:{" "}
-          {caseDetailsResponse?.updatedAt
-            ? new Date(caseDetailsResponse.updatedAt).toLocaleString()
-            : ""}
+        <span className="ml-auto text-sm text-primary-400 font-medium flex items-center gap-2">
+          Last update:{" "}
+          {isLoadingLastUpdate ? (
+            <Loader2 className="animate-spin text-primary-500 ml-1" size={16} />
+          ) : lastUpdate ? (
+            <span>
+              {new Date(
+                typeof lastUpdate === "string" ? lastUpdate : lastUpdate
+              ).toLocaleString()}
+            </span>
+          ) : (
+            " No updates yet"
+          )}
+          <button
+            type="button"
+            className="ml-2 text-xs underline text-secondary-600"
+            onClick={refreshLastUpdate}
+            disabled={isLoadingLastUpdate}
+            aria-label="Refresh last update"
+          >
+            Refresh
+          </button>
         </span>
         <span>
           {isLoadingStatus ? (
