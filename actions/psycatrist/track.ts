@@ -8,20 +8,25 @@ export async function getTrack(
 ) {
   try {
     // Build search filter for students
-    const where = search
-      ? {
-          OR: [
-            ...(isNaN(Number(search)) ? [] : [{ wdt_ID: Number(search) }]),
-            { name: { contains: search, mode: "insensitive" } },
-          ],
-          status: { in: ["Active", "Not yet"] }, // <-- Add this line
-        }
-      : {
-          status: { in: ["Active", "Not yet"] }, // <-- Add this line for no search
-        };
+    const where = {
+      status: { in: ["Active", "Not yet"] }, // <-- Add this line
+      StudentGeneralCase: {
+        isNot: null,
+      },
+      ...(search
+        ? {
+            OR: [
+              ...(isNaN(Number(search)) ? [] : [{ wdt_ID: Number(search) }]),
+              { name: { contains: search, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
 
     // Get the total count of students matching the search for pagination
-    const totalRows = await prisma.student.count({ where });
+    const totalRows = await prisma.student.count({
+      where,
+    });
     const totalPages = Math.ceil(totalRows / pageSize);
 
     // Fetch paginated students and their case history in one query

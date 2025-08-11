@@ -8,7 +8,11 @@ import {
   createGeneralCase,
   updateGeneralCase,
 } from "@/actions/psycatrist/generalCase";
-import { createCaseCard2, patientTypeData } from "@/actions/psycatrist/case";
+import {
+  createCaseCard2,
+  patientTypeData,
+  getCasePerStudent,
+} from "@/actions/psycatrist/case";
 import {
   createAppointment,
   getAppointmentById,
@@ -36,13 +40,14 @@ type Student = {
     solved: boolean;
     appointment: { id: string; status: string }[];
   }[];
-  // help me plase i went to define appointment type from the history
   appointment: { id: string; status: string }[];
   wdt_ID?: number;
   phoneno?: string;
   country?: string;
   status?: string;
 };
+
+type CaseItem = { id: string; createdAt: string };
 
 interface ColumnDef<T = any> {
   key: string;
@@ -56,7 +61,7 @@ function Page() {
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
 
-  // --- Modal State ---
+  // Modal State
   const [showGeneralCaseModal, setShowGeneralCaseModal] = useState(false);
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
@@ -67,13 +72,13 @@ function Page() {
     string | null
   >(null);
 
-  // --- Data Fetching ---
+  // Data Fetching
   const [studentsResponse, refreshStudents, isLoading] = useAction(
     getStudents,
     [
       true,
       (data) => {
-        console.log("Students data fetched:>>>>>", data);
+        console.log("Students data fetched:", data);
       },
     ],
     search,
@@ -86,13 +91,20 @@ function Page() {
     [true, () => {}]
   );
 
+  const [caseResponse, perStudentCaseAction, isLoadingCase] = useAction(
+    getCasePerStudent,
+    [, () => {}]
+  );
+
+  const [studentCases, setStudentCases] = useState<CaseItem[]>([]);
+
   const [appointmentDetailResponse, , isLoadingAppointmentDetail] = useAction(
     getAppointmentById,
     [true, () => {}],
     Data
   );
 
-  // --- Action Callbacks ---
+  // Action completion
   const handleActionCompletion = (
     response: { error?: string; message?: string } | null,
     successMessage: string
@@ -147,20 +159,18 @@ function Page() {
         handleActionCompletion(res, "Appointment status changed successfully."),
     ]);
 
-  // --- Form Handling ---
+  // Forms
   const caseForm = useForm<z.infer<typeof caseSchema>>({
     resolver: zodResolver(caseSchema),
   });
-
   const appointmentForm = useForm<z.infer<typeof appointmentSchema>>({
     resolver: zodResolver(appointmentSchema),
   });
-
   const generalCaseForm = useForm<z.infer<typeof generalCaseSchema>>({
     resolver: zodResolver(generalCaseSchema),
   });
 
-  // --- Event Handlers ---
+  // Handlers
   const handleOpenCaseModal = (student: Student) => {
     setSelectedStudent(student);
     caseForm.reset();
@@ -175,25 +185,34 @@ function Page() {
     setShowGeneralCaseModal(true);
   };
 
-  const handleOpenAppointmentModal = (student: Student) => {
+  const handleOpenAppointmentModal = async (student: Student) => {
     setSelectedStudent(student);
     appointmentForm.reset();
-    appointmentForm.setValue(
-      "caseId",
-      Array.isArray(student.StudentGeneralCase)
-        ? student.StudentGeneralCase[0]?.id || ""
-        : student.StudentGeneralCase &&
-          typeof student.StudentGeneralCase === "object" &&
-          "id" in student.StudentGeneralCase
-        ? (student.StudentGeneralCase as { id: string }).id
-        : ""
-    );
+    // Fetch cases via action
+    try {
+      const res = await getCasePerStudent(student.id);
+      console.log("Cases for student:", res);
+      let cases: CaseItem[] = [];
+      if (Array.isArray(res?.data))
+        cases = res.data.map((c: { id: string; createdAt: Date | string }) => ({
+          ...c,
+          createdAt: typeof c.createdAt === "string" ? c.createdAt : c.createdAt.toISOString(),
+        }));
+      setStudentCases(cases);
+      if (cases.length === 1) {
+        appointmentForm.setValue("caseId", cases[0].id);
+      }
+    } catch (e) {
+      console.error("getCasePerStudent error:", e);
+      setStudentCases([]);
+    }
     setShowAppointmentModal(true);
   };
 
   const handleOpenAppointmentDetailModal = (appointmentId: string) => {
     setSelectedAppointmentId(appointmentId);
     setShowAppointmentDetailModal(true);
+    setData(appointmentId);
   };
 
   const handleCloseAppointmentDetailModal = () => {
@@ -232,7 +251,7 @@ function Page() {
     await createAppointmentAction({ ...data, date: new Date(data.date) });
   };
 
-  // --- Table Rows & Columns ---
+  // Rows
   const rows: Student[] =
     (studentsResponse?.data || []).map((student: any) => ({
       key: String(student.wdt_ID),
@@ -240,7 +259,6 @@ function Page() {
       ...student,
     })) || [];
 
-  // Adapt rows to Record<string, string> & { key?: string | number; id?: string | number }
   const adaptedRows = rows.map((student) => {
     const {
       key,
@@ -254,7 +272,7 @@ function Page() {
       history,
     } = student;
     return {
-      key: key,
+      key,
       id: Number(id),
       name: name ?? "",
       wdt_ID: wdt_ID ?? 0,
@@ -319,59 +337,50 @@ function Page() {
       renderCell: (item: Student) => {
         if (!item.history || item.history.length === 0) {
           return <span className="text-gray-500">no flow up</span>;
-        } else {
-          let historyArr: { id: string; solved: boolean }[] = [];
-          try {
-            historyArr =
-              typeof item.history === "string"
-                ? JSON.parse(item.history)
-                : Array.isArray(item.history)
-                ? item.history
-                : [];
-          } catch {
-            historyArr = [];
-          }
-          return (
-            <div className="grid grid-cols-4 gap-9">
-              {historyArr.map((caseItem, index) => {
-                const isSolved = caseItem.solved;
-                const linkClass = isSolved
-                  ? "text-sm text-green-600 hover:underline hover:text-green-800 bg-green-100  pl-2 pr-5 py-1 rounded-md"
-                  : "text-sm text-red-600 hover:underline hover:text-red-800 bg-red-100 pl-2 pr-5  py-1 rounded-md";
-
-                return (
-                  <Link
-                    key={caseItem.id}
-                    href={`/en/case/${caseItem.id}`}
-                    className={linkClass}
-                  >
-                    {`C${index + 1}`}
-                  </Link>
-                );
-              })}
-            </div>
-          );
         }
+        let historyArr: { id: string; solved: boolean }[] = [];
+        try {
+          historyArr =
+            typeof item.history === "string"
+              ? JSON.parse(item.history)
+              : Array.isArray(item.history)
+              ? item.history
+              : [];
+        } catch {
+          historyArr = [];
+        }
+        return (
+          <div className="grid grid-cols-4 gap-9">
+            {historyArr.map((caseItem, index) => {
+              const isSolved = caseItem.solved;
+              const linkClass = isSolved
+                ? "text-sm text-green-600 hover:underline hover:text-green-800 bg-green-100  pl-2 pr-5 py-1 rounded-md"
+                : "text-sm text-red-600 hover:underline hover:text-red-800 bg-red-100 pl-2 pr-5  py-1 rounded-md";
+              return (
+                <Link
+                  key={caseItem.id}
+                  href={`/en/case/${caseItem.id}`}
+                  className={linkClass}
+                >
+                  {`C${index + 1}`}
+                </Link>
+              );
+            })}
+          </div>
+        );
       },
     },
     {
       key: "appointment",
       label: "Appointment List",
       renderCell: (item: Student) => {
-        console.log("Appointment fetched:", item.history);
-
         const appointmentArr = item.history.reduce(
           (acc, cc) => [...acc, ...cc.appointment],
-          [] as {
-            id: string;
-            status: string;
-          }[]
+          [] as { id: string; status: string }[]
         );
-
         if (appointmentArr.length === 0) {
           return <span className="text-gray-500">no appointment</span>;
         }
-
         return (
           <div className="flex flex-wrap gap-2 items-center">
             {appointmentArr.map((appt, idx) => (
@@ -456,13 +465,6 @@ function Page() {
         isLoading={isLoading}
       />
 
-      {/* Add General Case Modal */}
-      {/* {showGeneralCaseModal && selectedStudent && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md"></div>
-        </div>
-      )} */}
-      {/* Add General Case Modal */}
       {showGeneralCaseModal && selectedStudent && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -475,8 +477,7 @@ function Page() {
                 isLoading={isCreatingGeneralCase}
                 disabled={isCreatingGeneralCase}
                 onPress={async () => {
-                  const res = await createGeneralCaseAction(selectedStudent.id);
-                  // Optionally handle response here if you want to display it
+                  await createGeneralCaseAction(selectedStudent.id);
                 }}
               >
                 {isCreatingGeneralCase && (
@@ -492,14 +493,11 @@ function Page() {
               >
                 Cancel
               </Button>
-              {/* Optionally display response message */}
-              {/* You can add a state to store the last response and show it here if needed */}
             </div>
           </div>
         </div>
       )}
 
-      {/* Add Case Modal */}
       {showCaseModal && selectedStudent && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -580,7 +578,6 @@ function Page() {
         </div>
       )}
 
-      {/* Add Appointment Modal */}
       {showAppointmentModal && selectedStudent && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -589,6 +586,39 @@ function Page() {
             </h2>
             <form onSubmit={appointmentForm.handleSubmit(onAppointmentSubmit)}>
               <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Case
+                  </label>
+                  <select
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
+                    {...appointmentForm.register("caseId")}
+                    disabled={
+                      isCreatingAppointment ||
+                      isLoadingCase ||
+                      studentCases.length === 0
+                    }
+                    required
+                  >
+                    <option value="">
+                      {isLoadingCase
+                        ? "Loading cases..."
+                        : studentCases.length === 0
+                        ? "No cases found"
+                        : "Select a case"}
+                    </option>
+                    {studentCases.map((c, idx) => (
+                      <option key={c.id} value={c.id}>
+                        {`Case ${idx + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                  {appointmentForm.formState.errors.caseId && (
+                    <span className="text-red-500 text-xs mt-1">
+                      {appointmentForm.formState.errors.caseId.message}
+                    </span>
+                  )}
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Date
@@ -648,7 +678,6 @@ function Page() {
         </div>
       )}
 
-      {/* View Appointment Detail Modal */}
       {showAppointmentDetailModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">

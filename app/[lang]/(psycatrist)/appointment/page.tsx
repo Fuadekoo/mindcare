@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import CustomTable from "@/components/custom-table";
 import { Button } from "@heroui/react";
 import { addToast } from "@heroui/toast";
@@ -9,8 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 import useAction from "@/hooks/useActions";
-// import { Calendar } from "@heroui/react";
-// import { parseDate } from "@internationalized/date";
 import { getStudents } from "@/actions/psycatrist/students";
 import {
   changeAppointmentStatus,
@@ -19,6 +17,7 @@ import {
   deleteAppointment,
   updateAppointment,
 } from "@/actions/psycatrist/appointment";
+import { getCasePerStudent } from "@/actions/psycatrist/case";
 import { appointmentSchema } from "@/lib/zodSchema";
 
 type ColumnDef = {
@@ -27,16 +26,41 @@ type ColumnDef = {
   renderCell?: (item: Record<string, string>) => React.ReactNode;
 };
 
-function Page() {
-  const [showModal, setShowModal] = useState(false);
-  const [editItem, setEditItem] = useState<AppointmentRow | null>(null);
+type AppointmentRow = {
+  id: string;
+  caseId: string;
+  studentId?: string;
+  student_wdt_ID?: string;
+  student_name?: string;
+  date: string;
+  time: string;
+  status: string;
+  createdAt: string;
+  [key: string]: string | undefined;
+};
 
+type CaseOption = { value: string; label: string };
+
+function Page() {
+  // Table state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  // --- Data Fetching ---
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+
+  // Modal & edit
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState<AppointmentRow | null>(null);
+
+  // Dynamic student & case selection
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(
+    null
+  );
+  const [caseOptions, setCaseOptions] = useState<CaseOption[]>([]);
+  const [isLoadingCases, setIsLoadingCases] = useState(false);
+
+  // Data actions
   const [appointmentsResponse, refreshAppointments, isLoadingAppointments] =
     useAction(
       getAppointments,
@@ -52,57 +76,6 @@ function Page() {
     true,
     () => {},
   ]);
-
-  // --- Form Handling ---
-  // const ak = typeof appointmentSchema;
-  const {
-    handleSubmit,
-    control,
-    reset,
-    setValue,
-    register,
-    formState: { errors, isSubmitting },
-  } = useForm<z.infer<typeof appointmentSchema>>({
-    resolver: zodResolver(appointmentSchema),
-    defaultValues: {
-      caseId: undefined,
-      date: "",
-      time: "",
-    },
-  });
-
-  // --- Actions ---
-  const handleActionCompletion = (
-    response: unknown,
-    successMessage: string,
-    errorMessage: string
-  ) => {
-    if (response) {
-      addToast({ title: "Success", description: successMessage });
-      refreshAppointments();
-      if (showModal) {
-        setShowModal(false);
-        reset();
-      }
-    } else {
-      addToast({
-        title: "Error",
-        description: errorMessage,
-      });
-    }
-  };
-
-  const handleDateChange = ({
-    startDate,
-    endDate,
-  }: {
-    startDate: string | null;
-    endDate: string | null;
-  }) => {
-    setStartDate(startDate ? new Date(startDate) : undefined);
-    setEndDate(endDate ? new Date(endDate) : undefined);
-    setPage(1); // Reset to the first page when the filter changes
-  };
 
   const [, createAction, isCreatingAppointment] = useAction(createAppointment, [
     ,
@@ -147,7 +120,51 @@ function Page() {
     ]
   );
 
-  // Memoize student options for react-select
+  // Form
+  const {
+    handleSubmit,
+    control,
+    reset,
+    setValue,
+    register,
+    formState: { errors, isSubmitting },
+  } = useForm<z.infer<typeof appointmentSchema>>({
+    resolver: zodResolver(appointmentSchema),
+    defaultValues: { caseId: undefined, date: "", time: "" },
+  });
+
+  function handleActionCompletion(
+    response: unknown,
+    successMessage: string,
+    errorMessage: string
+  ) {
+    if (response) {
+      addToast({ title: "Success", description: successMessage });
+      refreshAppointments();
+      if (showModal) {
+        setShowModal(false);
+        reset();
+        setSelectedStudentId(null);
+        setCaseOptions([]);
+      }
+    } else {
+      addToast({ title: "Error", description: errorMessage });
+    }
+  }
+
+  const handleDateChange = ({
+    startDate,
+    endDate,
+  }: {
+    startDate: string | null;
+    endDate: string | null;
+  }) => {
+    setStartDate(startDate ? new Date(startDate) : undefined);
+    setEndDate(endDate ? new Date(endDate) : undefined);
+    setPage(1);
+  };
+
+  // Student select options
   const studentOptions = useMemo(() => {
     if (!studentsResponse?.data) return [];
     return studentsResponse.data.map(
@@ -158,53 +175,86 @@ function Page() {
     );
   }, [studentsResponse]);
 
-  // --- Event Handlers ---
+  // Fetch cases per student
+  const fetchCases = useCallback(
+    async (studentId: number) => {
+      setIsLoadingCases(true);
+      try {
+        const res = await getCasePerStudent(studentId);
+        const list: { id: string }[] = Array.isArray(res?.data) ? res.data : [];
+        const mapped = list.map((c, idx) => ({
+          value: c.id,
+          label: `Case ${idx + 1}`,
+        }));
+        setCaseOptions(mapped);
+        if (mapped.length === 1) {
+          setValue("caseId", mapped[0].value);
+        } else {
+          setValue("caseId", undefined as any);
+        }
+      } catch (e) {
+        console.error("Error loading cases:", e);
+        setCaseOptions([]);
+        setValue("caseId", undefined as any);
+      } finally {
+        setIsLoadingCases(false);
+      }
+    },
+    [setValue]
+  );
+
+  // React to student selection
+  useEffect(() => {
+    if (selectedStudentId == null) {
+      setCaseOptions([]);
+      setValue("caseId", undefined as any);
+      return;
+    }
+    fetchCases(selectedStudentId);
+  }, [selectedStudentId, fetchCases, setValue]);
+
+  // Add
   const handleAdd = () => {
     setEditItem(null);
     reset();
+    setSelectedStudentId(null);
+    setCaseOptions([]);
     setShowModal(true);
   };
 
-  type AppointmentRow = {
-    id: string;
-    student_wdt_ID: string;
-    student_name: string;
-    date: string;
-    time: string;
-    status: string;
-    createdAt: string;
-    [key: string]: string;
-  };
-
+  // Edit (assumes backend row includes case + student references if needed)
   const handleEdit = (item: AppointmentRow) => {
     setEditItem(item);
+    // If you can derive studentId from row -> setSelectedStudentId(Number(item.studentId))
+    // Else leave student/case unchanged (disabled)
+    if (item.studentId) {
+      const parsed = Number(item.studentId);
+      if (!Number.isNaN(parsed)) setSelectedStudentId(parsed);
+    }
     setValue("caseId", item.caseId);
-    setValue("date", item.date.split("T")[0]);
+    setValue("date", item.date);
     setValue("time", item.time);
     setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this appointment?")) {
+    if (window.confirm("Delete this appointment?")) {
       await deleteAction(id);
     }
   };
 
   const handleChangeStatus = async (id: string) => {
-    if (
-      window.confirm(
-        "Are you sure you want to change the status of this appointment?"
-      )
-    ) {
+    if (window.confirm("Change status of this appointment?")) {
       await changeStatusAction(id);
     }
   };
 
   const onSubmit = async (data: z.infer<typeof appointmentSchema>) => {
-    const payload = {
-      ...data,
-      date: new Date(data.date),
-    };
+    if (!data.caseId) {
+      addToast({ title: "Error", description: "Please select a case." });
+      return;
+    }
+    const payload = { ...data, date: new Date(data.date) };
     if (editItem) {
       await updateAction(editItem.id, payload);
     } else {
@@ -212,14 +262,15 @@ function Page() {
     }
   };
 
-  // Convert all row fields to string for CustomTable compatibility
-  const rows =
-    (appointmentsResponse?.data || []).map((item) => ({
+  // Rows for table
+  const rows: AppointmentRow[] =
+    (appointmentsResponse?.data || []).map((item: any) => ({
       key: String(item.id),
       id: String(item.id),
       caseId: item.case,
-      // student_wdt_ID: item.student?.wdt_ID ? String(item.student.wdt_ID) : "",
-      // student_name: item.student?.name ?? "",
+      studentId: item.student?.wdt_ID ? String(item.student.wdt_ID) : undefined,
+      student_wdt_ID: item.student?.wdt_ID ? String(item.student.wdt_ID) : "",
+      student_name: item.student?.name ?? "",
       date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
       time: item.time ?? "",
       status: item.status ?? "",
@@ -231,22 +282,19 @@ function Page() {
       key: "autoId",
       label: "#",
       renderCell: (item) => {
-        const rowIndexOnPage = rows.findIndex((r) => r.id === item.id);
-        if (rowIndexOnPage !== -1) {
-          return (page - 1) * pageSize + rowIndexOnPage + 1;
-        }
-        return item.id;
+        const idx = rows.findIndex((r) => r.id === item.id);
+        return idx !== -1 ? (page - 1) * pageSize + idx + 1 : item.id;
       },
     },
     {
       key: "student_wdt_ID",
       label: "Student ID",
-      renderCell: (item) => item.student_wdt_ID,
+      renderCell: (item) => item.student_wdt_ID || "-",
     },
     {
       key: "student_name",
       label: "Student Name",
-      renderCell: (item) => item.student_name,
+      renderCell: (item) => item.student_name || "-",
     },
     {
       key: "date",
@@ -254,11 +302,7 @@ function Page() {
       renderCell: (item) =>
         item.date ? new Date(item.date).toLocaleDateString() : "N/A",
     },
-    {
-      key: "time",
-      label: "Time",
-      renderCell: (item) => item.time,
-    },
+    { key: "time", label: "Time", renderCell: (item) => item.time || "-" },
     {
       key: "status",
       label: "Status",
@@ -327,7 +371,6 @@ function Page() {
     },
   ];
 
-  // Handle loading state
   if (isLoadingAppointments && !appointmentsResponse?.data && page === 1) {
     return (
       <div className="flex justify-center items-center h-full p-4">
@@ -335,6 +378,9 @@ function Page() {
       </div>
     );
   }
+
+  const disableSubmit =
+    isCreatingAppointment || isUpdatingAppointment || isSubmitting;
 
   return (
     <div className="p-4 sm:p-6">
@@ -345,6 +391,7 @@ function Page() {
           Add Appointment
         </Button>
       </div>
+
       <CustomTable
         columns={columns}
         rows={rows}
@@ -352,25 +399,22 @@ function Page() {
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
-        onPageSizeChange={(newPageSize) => {
-          setPageSize(newPageSize);
+        onPageSizeChange={(n) => {
+          setPageSize(n);
           setPage(1);
         }}
         searchValue={search}
-        onSearch={(value) => {
-          setSearch(value);
+        onSearch={(val) => {
+          setSearch(val);
           setPage(1);
         }}
         isLoading={isLoadingAppointments}
-        enableDateFilter={true}
-        startDate={
-          startDate ? startDate.toISOString().split("T")[0] : undefined
-        }
-        endDate={endDate ? endDate.toISOString().split("T")[0] : undefined}
+        enableDateFilter
+        startDate={startDate?.toISOString().split("T")[0]}
+        endDate={endDate?.toISOString().split("T")[0]}
         onDateChange={handleDateChange}
       />
 
-      {/* Modal for Add/Edit */}
       {showModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -379,53 +423,77 @@ function Page() {
             </h2>
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="flex flex-col gap-4">
+                {/* Student Select */}
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Student
+                  </label>
+                  <Select
+                    placeholder="Select a student..."
+                    options={studentOptions}
+                    isClearable
+                    isDisabled={!!editItem || disableSubmit}
+                    isLoading={isLoadingStudents}
+                    value={
+                      studentOptions.find(
+                        (s) => s.value === selectedStudentId
+                      ) || null
+                    }
+                    onChange={(opt) =>
+                      setSelectedStudentId(opt ? Number(opt.value) : null)
+                    }
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        borderRadius: "0.5rem",
+                        minHeight: "42px",
+                      }),
+                    }}
+                  />
+                </div>
+
+                {/* Case Select */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Case
+                  </label>
                   <Controller
                     name="caseId"
                     control={control}
                     render={({ field }) => (
                       <Select
                         {...field}
-                        options={studentOptions}
-                        placeholder="Search and select a student..."
-                        isClearable
-                        isSearchable
-                        isLoading={isLoadingStudents}
-                        isDisabled={
-                          isCreatingAppointment ||
-                          isUpdatingAppointment ||
-                          isSubmitting
+                        placeholder={
+                          selectedStudentId == null
+                            ? "Select a student first"
+                            : isLoadingCases
+                            ? "Loading cases..."
+                            : caseOptions.length === 0
+                            ? "No cases"
+                            : "Select a case"
                         }
-                        onChange={(option) =>
-                          field.onChange(option ? option.value : undefined)
+                        options={caseOptions}
+                        isLoading={isLoadingCases}
+                        isDisabled={
+                          selectedStudentId == null ||
+                          isLoadingCases ||
+                          disableSubmit
                         }
                         value={
-                          studentOptions.find((c) => c.value === field.value) ||
+                          caseOptions.find((c) => c.value === field.value) ||
                           null
+                        }
+                        onChange={(opt) =>
+                          field.onChange(opt ? opt.value : undefined)
                         }
                         styles={{
                           control: (base) => ({
                             ...base,
                             borderRadius: "0.5rem",
-                            borderColor: errors.caseId ? "#ef4444" : "#d1d5db",
-                            "&:hover": {
-                              borderColor: errors.caseId
-                                ? "#ef4444"
-                                : "#8b5cf6",
-                            },
-                            boxShadow: errors.caseId
-                              ? "0 0 0 1px #ef4444"
-                              : "none",
                             minHeight: "42px",
-                          }),
-                          option: (base, state) => ({
-                            ...base,
-                            backgroundColor: state.isSelected
-                              ? "#8b5cf6"
-                              : state.isFocused
-                              ? "#f5f3ff"
-                              : "white",
-                            color: state.isSelected ? "white" : "#374151",
+                            borderColor: errors.caseId
+                              ? "#ef4444"
+                              : base.borderColor,
                           }),
                         }}
                       />
@@ -437,16 +505,14 @@ function Page() {
                     </span>
                   )}
                 </div>
+
+                {/* Date */}
                 <div>
                   <input
                     type="date"
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
                     {...register("date")}
-                    disabled={
-                      isCreatingAppointment ||
-                      isUpdatingAppointment ||
-                      isSubmitting
-                    }
+                    disabled={disableSubmit}
                   />
                   {errors.date && (
                     <span className="text-red-500 text-xs mt-1">
@@ -454,16 +520,14 @@ function Page() {
                     </span>
                   )}
                 </div>
+
+                {/* Time */}
                 <div>
                   <input
                     type="time"
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
                     {...register("time")}
-                    disabled={
-                      isCreatingAppointment ||
-                      isUpdatingAppointment ||
-                      isSubmitting
-                    }
+                    disabled={disableSubmit}
                   />
                   {errors.time && (
                     <span className="text-red-500 text-xs mt-1">
@@ -472,36 +536,30 @@ function Page() {
                   )}
                 </div>
               </div>
+
               <div className="flex justify-end gap-3 mt-6">
                 <Button
                   variant="ghost"
                   type="button"
-                  onPress={() => setShowModal(false)}
-                  disabled={
-                    isCreatingAppointment ||
-                    isUpdatingAppointment ||
-                    isSubmitting
-                  }
+                  onPress={() => {
+                    setShowModal(false);
+                    reset();
+                    setSelectedStudentId(null);
+                    setCaseOptions([]);
+                  }}
+                  disabled={disableSubmit}
                 >
                   Cancel
                 </Button>
                 <Button
                   color="primary"
                   type="submit"
-                  isLoading={
-                    isCreatingAppointment ||
-                    isUpdatingAppointment ||
-                    isSubmitting
-                  }
+                  isLoading={disableSubmit}
                   disabled={
-                    isCreatingAppointment ||
-                    isUpdatingAppointment ||
-                    isSubmitting
+                    disableSubmit || !selectedStudentId || !caseOptions.length
                   }
                 >
-                  {(isCreatingAppointment ||
-                    isUpdatingAppointment ||
-                    isSubmitting) && (
+                  {disableSubmit && (
                     <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
                   )}
                   {editItem ? "Update" : "Add"}

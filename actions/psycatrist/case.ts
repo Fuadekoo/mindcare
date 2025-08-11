@@ -310,11 +310,17 @@ export async function getCasePerStudent(id: number) {
   try {
     const cases = await prisma.history.findMany({
       where: { student: { wdt_ID: id }, solved: false },
+      select: {
+        id: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
     });
-    return cases;
+    console.log("Cases for student:", cases);
+    return { data: cases };
   } catch (error) {
     console.error("Error fetching cases for student:", error);
-    return [];
+    return { data: [] };
   }
 }
 

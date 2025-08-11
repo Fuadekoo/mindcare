@@ -76,7 +76,7 @@ export async function getStudents(
     const adaptedData = data.map((student) => ({
       ...student,
       // Flatten all appointments from all histories into a top-level appointment array
-      appointment: (student.history || []).flatMap((h) => h.appointment || []),
+      appointment: (student.history || []).map((h) => h.appointment || []),
       // Optionally, always make StudentGeneralCase an array for frontend consistency
       StudentGeneralCase: student.StudentGeneralCase
         ? [student.StudentGeneralCase]
@@ -84,7 +84,9 @@ export async function getStudents(
     }));
 
     console.log("Students fetched:", data);
-    console.table(data.map((item) => item.history.map((h) => h.appointment)));
+    // console.table(data.map((item) => item.history.map((h) => h.appointment)));
+    console.table(adaptedData.map((item) => item.appointment));
+    console.log("Adapted students:", adaptedData);
 
     return {
       data: adaptedData,
