@@ -78,14 +78,20 @@ export async function createAppointment(data: {
 }) {
   const schema = z.object({
     caseId: z.string().min(1, "Case ID is required"),
-    date: z.date(),
+    date: z.coerce.date(),
     time: z.string().min(1, "Time is required"),
   });
+  // console.log("Creating appointment with data:>>>>", data);
 
   const parsedData = schema.safeParse(data);
+  console.log;
   if (!parsedData.success) {
     // throw new Error(parsedData.error.errors[0].message);
-    return null;
+    const errorMessage = parsedData.error.issues
+      .map((e) => e.message)
+      .join(", ");
+    console.error("Validation Error:", errorMessage);
+    return { error: "Invalid data", message: errorMessage };
   }
 
   try {

@@ -115,7 +115,7 @@ async function main() {
     },
   });
 
-  const history2 = await prisma.history.create({
+  await prisma.history.create({
     data: {
       studentId: student1.wdt_ID,
       studentGeneralCaseId: case1.id,
@@ -159,7 +159,7 @@ async function main() {
     },
   });
 
-  const history4 = await prisma.history.create({
+  await prisma.history.create({
     data: {
       studentId: student2.wdt_ID,
       studentGeneralCaseId: case2.id,
@@ -183,7 +183,7 @@ async function main() {
   // 6. Create Appointments linked to history (case)
   await prisma.appointment.create({
     data: {
-      caseId: history1.historyCode,
+      caseId: history1.id,
       date: new Date("2024-07-20T10:00:00Z"),
       time: "10:00",
       status: "confirmed",
@@ -192,7 +192,7 @@ async function main() {
 
   await prisma.appointment.create({
     data: {
-      caseId: history3.historyCode,
+      caseId: history3.id,
       date: new Date("2024-07-21T14:00:00Z"),
       time: "14:00",
       status: "pending",

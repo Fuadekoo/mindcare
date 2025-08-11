@@ -5,6 +5,7 @@ import CustomTable from "@/components/custom-table";
 import useAction from "@/hooks/useActions";
 import { getStudents } from "@/actions/psycatrist/students";
 import {
+  getAllGeneralCasePerStudent,
   createGeneralCase,
   updateGeneralCase,
 } from "@/actions/psycatrist/generalCase";
@@ -97,6 +98,15 @@ function Page() {
   );
 
   const [studentCases, setStudentCases] = useState<CaseItem[]>([]);
+
+  const [generalCaseResponse, action, isLoadingGeneralCases] = useAction(
+    getAllGeneralCasePerStudent,
+    [, () => {}]
+  );
+
+  const [generalCasesPerStudent, setGeneralCasesPerStudent] = useState<
+    { id: string; createdAt: string }[]
+  >([]);
 
   const [appointmentDetailResponse, , isLoadingAppointmentDetail] = useAction(
     getAppointmentById,
@@ -196,7 +206,10 @@ function Page() {
       if (Array.isArray(res?.data))
         cases = res.data.map((c: { id: string; createdAt: Date | string }) => ({
           ...c,
-          createdAt: typeof c.createdAt === "string" ? c.createdAt : c.createdAt.toISOString(),
+          createdAt:
+            typeof c.createdAt === "string"
+              ? c.createdAt
+              : c.createdAt.toISOString(),
         }));
       setStudentCases(cases);
       if (cases.length === 1) {
@@ -248,6 +261,7 @@ function Page() {
   const onAppointmentSubmit = async (
     data: z.infer<typeof appointmentSchema>
   ) => {
+    console.log("Appointment data:>>>>", data);
     await createAppointmentAction({ ...data, date: new Date(data.date) });
   };
 
@@ -498,6 +512,7 @@ function Page() {
         </div>
       )}
 
+{/* this is a case createpopup model */}
       {showCaseModal && selectedStudent && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -506,6 +521,37 @@ function Page() {
             </h2>
             <form onSubmit={caseForm.handleSubmit(onCaseSubmit)}>
               <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    General Case
+                  </label>
+                  <select
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500 disabled:bg-gray-100"
+                    {...caseForm.register("studentGeneralCaseId")}
+                    disabled={
+                      isCreatingCase ||
+                      !selectedStudent?.StudentGeneralCase ||
+                      selectedStudent.StudentGeneralCase.length === 0
+                    }
+                    required
+                  >
+                    <option value="">
+                      {selectedStudent?.StudentGeneralCase?.length === 0
+                        ? "No general case found"
+                        : "Select a general case"}
+                    </option>
+                    {selectedStudent?.StudentGeneralCase?.map((gc, idx) => (
+                      <option key={gc.id} value={gc.id}>
+                        {`General Case ${idx + 1} (${gc.status})`}
+                      </option>
+                    ))}
+                  </select>
+                  {caseForm.formState.errors.studentGeneralCaseId && (
+                    <span className="text-red-500 text-xs mt-1">
+                      {caseForm.formState.errors.studentGeneralCaseId.message}
+                    </span>
+                  )}
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Problem Type

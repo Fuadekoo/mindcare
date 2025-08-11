@@ -4,54 +4,46 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { select } from "@heroui/react";
 export async function getCaseCard(
+  GeneralCaseId: string,
   search?: string,
-  page?: number,
-  pageSize?: number
+  page: number = 1,
+  perPage: number = 10
 ) {
   try {
-    // Default values for pagination
-    page = page || 1;
-    pageSize = pageSize || 10;
-
-    const where = search
-      ? {
-          OR: [
-            { historyCode: { contains: search, mode: "insensitive" } },
-            // { patientTypeData: { contains: search, mode: "insensitive" } },
-          ],
-        }
-      : {};
-
-    const totalRows = await prisma.history.count({ where });
-    const totalPages = Math.ceil(totalRows / pageSize);
-
-    const histories = await prisma.history.findMany({
-      where,
-      select: {
-        id: true,
-        StudentGeneralCase: { select: { id: true, status: true } },
-        student: { select: { wdt_ID: true, name: true } },
-        historyCode: true,
-        patientData: { select: { type: true } },
-        note: true,
-        solved: true,
-        createdAt: true,
-      },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    });
-
-    return {
-      data: histories,
-      pagination: {
-        currentPage: page,
-        totalPages: totalPages,
-        itemsPerPage: pageSize,
-        totalRecords: totalRows,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
-      },
+    const where: any = {
+      studentGeneralCaseId: GeneralCaseId,
     };
+
+    if (search) {
+      where.OR = [
+        { historyCode: { contains: search, mode: "insensitive" } },
+        { note: { contains: search, mode: "insensitive" } },
+        { student: { name: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    const [histories, total] = await Promise.all([
+      prisma.history.findMany({
+        where,
+        select: {
+          id: true,
+          StudentGeneralCase: { select: { id: true, status: true } },
+          student: { select: { wdt_ID: true, name: true } },
+          historyCode: true,
+          patientData: { select: { type: true } },
+          note: true,
+          solved: true,
+          createdAt: true,
+          priority: true,
+        },
+        skip: (page - 1) * perPage,
+        take: perPage,
+        orderBy: { priority: "asc" },
+      }),
+      prisma.history.count({ where }),
+    ]);
+
+    return { data: histories, total, page, perPage };
   } catch (error) {
     console.error("Error fetching case cards:", error);
     throw new Error("Failed to fetch case cards");

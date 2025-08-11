@@ -47,7 +47,7 @@ model appointment {
   time      String
   status    String   @default("pending")
   caseId    String?
-  case      history? @relation(fields: [caseId], references: [historyCode])
+  case      history? @relation(fields: [caseId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -81,7 +81,7 @@ model history {
   appointment          appointment[]
   StudentGeneralCase   StudentGeneralCase @relation(fields: [studentGeneralCaseId], references: [id])
   studentGeneralCaseId String
-  priority             Int    
+  priority             Int
 
   @@unique([studentId, priority])
 }

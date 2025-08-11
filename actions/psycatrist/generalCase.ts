@@ -1,12 +1,50 @@
 "use server";
 import prisma from "@/lib/db";
 import { z } from "zod";
-export async function getGeneraleCase() {
+
+export async function getAllGeneralCasePerStudent(studentId: number) {
   try {
     const generalCases = await prisma.studentGeneralCase.findMany({
+      where: { studentId, status: "open" },
+      select: {
+        id: true,
+        createdAt: true,
+      },
+    });
+    return generalCases;
+  } catch (error) {
+    console.error("Error fetching general cases:", error);
+    throw new Error("Failed to fetch general cases");
+  }
+}
+
+export async function getGeneralCase(
+  search?: string,
+  page?: number,
+  pageSize?: number
+) {
+  try {
+    // Default values for pagination
+    page = page || 1;
+    pageSize = pageSize || 10;
+
+    const where = search
+      ? {
+          student: {
+            name: { contains: search, mode: "insensitive" },
+          },
+        }
+      : {};
+
+    const totalRows = await prisma.studentGeneralCase.count({ where });
+    const totalPages = Math.ceil(totalRows / pageSize);
+
+    const generalCases = await prisma.studentGeneralCase.findMany({
+      where,
       select: {
         id: true,
         status: true,
+        createdAt: true,
         student: {
           select: {
             wdt_ID: true,
@@ -14,8 +52,21 @@ export async function getGeneraleCase() {
           },
         },
       },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
-    return generalCases;
+
+    return {
+      data: generalCases,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        itemsPerPage: pageSize,
+        totalRecords: totalRows,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   } catch (error) {
     console.error("Error fetching general cases:", error);
     throw new Error("Failed to fetch general cases");
