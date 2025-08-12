@@ -1,4 +1,6 @@
 "use server";
+
+
 import prisma from "@/lib/db";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -355,18 +357,20 @@ export async function rejectOldPendingAppointments() {
 // i went the last update of the case from the history,observation and treatment get the createat then the recent one
 export async function lastCaseUpdate(caseId: string) {
   try {
+    console.log("lasted update1");
     // Get updatedAt from history
     const history = await prisma.history.findUnique({
       where: { id: caseId },
       select: { updatedAt: true },
     });
-
+    console.log("lasted update1", history);
     // Get latest createdAt from observation
     const observation = await prisma.observation.findFirst({
       where: { historyId: caseId },
       orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
+    console.log("lasted update1", observation);
 
     // Get latest createdAt from treatment
     const treatment = await prisma.treatment.findFirst({
@@ -374,6 +378,7 @@ export async function lastCaseUpdate(caseId: string) {
       orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
+    console.log("lasted update1", treatment);
 
     const dates = [
       history?.updatedAt,
@@ -396,7 +401,7 @@ export async function lastCaseUpdate(caseId: string) {
       }
     }
 
-    console.log("Last case update date:", closestDate);
+    console.log("Last case update date:>>>>>>>>>>", closestDate);
     return closestDate;
 
     // if (dates.length === 0) return null;

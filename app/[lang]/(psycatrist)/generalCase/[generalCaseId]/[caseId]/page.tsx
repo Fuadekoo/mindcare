@@ -145,7 +145,7 @@ function EditableSection({
 }
 
 function Page() {
-  const { caseId } = useParams();
+  const { caseId } = useParams<{ caseId: string }>();
 
   // --- Data Fetching & Action Hooks ---
 
@@ -295,10 +295,13 @@ function Page() {
     [
       true,
       (res) => {
-        res ? undefined : toastError("Failed to load last update.");
+        console.log("lasted update1", res);
+        if (!res) {
+          toastError("Failed to load last update.");
+        }
       },
     ],
-    caseId as string
+    caseId
   );
 
   // Memoized data transformation
@@ -356,7 +359,7 @@ function Page() {
         <h1 className="text-2xl font-bold text-primary-800 tracking-tight">
           Case Details
         </h1>
-        <span className="ml-auto text-sm text-primary-400 font-medium flex items-center gap-2">
+        <span className="ml-auto text-sm bg-red-300 text-primary-400 font-medium flex items-center gap-2">
           Last update:{" "}
           {isLoadingLastUpdate ? (
             <Loader2 className="animate-spin text-primary-500 ml-1" size={16} />

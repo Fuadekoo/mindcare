@@ -27,8 +27,8 @@ type StudentOption = {
 };
 
 function Page() {
-  const params = useParams();
-  const GeneralCaseId = params?.generalCaseId as string;
+  const { generalCaseId } = useParams<{ generalCaseId: string }>();
+  // const GeneralCaseId = params?.generalCaseId as string;
 
   const [showModal, setShowModal] = useState(false);
   // const [problemTypes, setProblemTypes] = useState<ProblemType[]>([]);
@@ -41,7 +41,7 @@ function Page() {
   const [casesResponse, refreshCases, isLoadingCases] = useAction(
     getCaseCard,
     [true, () => {}],
-    GeneralCaseId,
+    generalCaseId,
     search,
     page,
     perPage
