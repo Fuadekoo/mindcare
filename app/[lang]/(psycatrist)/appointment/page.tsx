@@ -269,8 +269,10 @@ function Page() {
       id: String(item.id),
       caseId: item.case,
       studentId: item.student?.wdt_ID ? String(item.student.wdt_ID) : undefined,
-      student_wdt_ID: item.student?.wdt_ID ? String(item.student.wdt_ID) : "",
-      student_name: item.student?.name ?? "",
+      student_wdt_ID: item.case?.student?.wdt_ID
+        ? String(item.case.student.wdt_ID)
+        : "",
+      student_name: item.case?.student?.name ?? "",
       date: item.date ? new Date(item.date).toISOString().split("T")[0] : "",
       time: item.time ?? "",
       status: item.status ?? "",
