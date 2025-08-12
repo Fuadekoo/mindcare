@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getStudents } from "@/actions/psycatrist/students";
+import CustomAlert from "@/components/custom-alert";
 import {
   getGeneralCase,
   createGeneralCase,
@@ -76,6 +77,12 @@ function Page() {
   const [showModal, setShowModal] = useState(false);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const [closeId, setCloseId] = useState<string | null>(null);
+  const [pendingCloseId, setPendingCloseId] = useState<string | null>(null);
 
   const [generalCasesResponse, refreshGeneralCases, isLoadingGeneralCases] =
     useAction(getGeneralCase, [true, () => {}], search, page, pageSize);
@@ -169,14 +176,35 @@ function Page() {
     await createAction(data.studentId);
   };
 
-  const handleCloseCase = async (id: string) => {
-    if (!confirm("Close this general case?")) return;
-    await updateAction(id);
+  const handleCloseCase = (id: string) => {
+    setCloseId(id);
   };
 
-  const handleDeleteCase = async (id: string) => {
-    if (!confirm("Delete this general case?")) return;
-    await deleteAction(id);
+  const handleConfirmClose = async () => {
+    if (!closeId) return;
+    try {
+      setPendingCloseId(closeId);
+      await updateAction(closeId);
+      setCloseId(null);
+    } finally {
+      setPendingCloseId(null);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    setDeleteId(id);
+  };
+
+  // Confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      setPendingDeleteId(deleteId);
+      await deleteAction(deleteId);
+      setDeleteId(null);
+    } finally {
+      setPendingDeleteId(null);
+    }
   };
 
   const handleDetails = (id: string) => {
@@ -294,7 +322,7 @@ function Page() {
                         size="sm"
                         variant="flat"
                         color="danger"
-                        onPress={() => handleDeleteCase(gc.id)}
+                        onPress={() => handleDelete(gc.id)}
                         disabled={isBusy}
                       >
                         Delete
@@ -434,6 +462,40 @@ function Page() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm">
+            <CustomAlert
+              color="danger"
+              title="Delete appointment?"
+              description="This action cannot be undone."
+              confirmText="Delete"
+              cancelText="Cancel"
+              onConfirm={handleConfirmDelete}
+              onCancel={() => setDeleteId(null)}
+              isConfirmLoading={pendingDeleteId === deleteId && isDeleting}
+            />
+          </div>
+        </div>
+      )}
+
+      {closeId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm">
+            <CustomAlert
+              color="danger"
+              title="Close case?"
+              description="This action cannot be undone."
+              confirmText="Close"
+              cancelText="Cancel"
+              onConfirm={handleConfirmClose}
+              onCancel={() => setCloseId(null)}
+              isConfirmLoading={pendingCloseId === closeId && isUpdating}
+            />
           </div>
         </div>
       )}

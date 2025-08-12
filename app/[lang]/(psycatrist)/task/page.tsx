@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
+import CustomAlert from "@/components/custom-alert";
 
 // Zod schema for task validation
 const taskSchema = z.object({
@@ -46,6 +47,8 @@ function Page() {
     page,
     pageSize
   );
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const [, createAction, isCreating] = useAction(createTask, [, () => {}]);
 
@@ -75,13 +78,25 @@ function Page() {
     refreshTasks();
   };
 
-  const handleDeleteTask = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this task?")) {
-      await deleteAction(id);
+  const handleDeleteTask = (id: string) => {
+    setDeleteId(id);
+  };
+
+  // Confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      setPendingDeleteId(deleteId);
+      await deleteAction(deleteId);
       addToast({ title: "Success", description: "Task deleted." });
       refreshTasks();
+      setDeleteId(null);
+    } finally {
+      setPendingDeleteId(null);
     }
   };
+
+  const isDeletingAppointment = isDeleting;
 
   // --- Memoized Data for Rendering ---
   const tasks: Task[] = useMemo(
@@ -195,6 +210,22 @@ function Page() {
           tasks.
         </p>
       </div>
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm">
+            <CustomAlert
+              color="danger"
+              title="Delete appointment?"
+              description="This action cannot be undone."
+              confirmText="Delete"
+              cancelText="Cancel"
+              onConfirm={handleConfirmDelete}
+              onCancel={() => setDeleteId(null)}
+              isConfirmLoading={pendingDeleteId === deleteId && isDeleting}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

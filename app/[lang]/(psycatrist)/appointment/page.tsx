@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import CustomTable from "@/components/custom-table";
-import { Button } from "@heroui/react";
+import CustomAlert from "@/components/custom-alert";
+import { Alert, Button } from "@heroui/react";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
@@ -48,6 +49,11 @@ function Page() {
   const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
+
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Modal & edit
   const [showModal, setShowModal] = useState(false);
@@ -237,15 +243,46 @@ function Page() {
     setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Delete this appointment?")) {
-      await deleteAction(id);
+  // const handleDelete = async (id: string) => {
+  //   if (window.confirm("Delete this appointment?")) {
+  //     await deleteAction(id);
+  //   }
+  // };
+
+  const handleDelete = (id: string) => {
+    setDeleteId(id);
+  };
+
+  // Confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      setPendingDeleteId(deleteId);
+      await deleteAction(deleteId);
+      setDeleteId(null);
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
-  const handleChangeStatus = async (id: string) => {
-    if (window.confirm("Change status of this appointment?")) {
-      await changeStatusAction(id);
+  // const handleChangeStatus = async (id: string) => {
+  //   if (window.confirm("Change status of this appointment?")) {
+  //     await changeStatusAction(id);
+  //   }
+  // };
+
+  const handleChangeStatus = (id: string) => {
+    setConfirmId(id);
+  };
+
+  const handleConfirmChangeStatus = async () => {
+    if (!confirmId) return;
+    try {
+      setPendingStatusId(confirmId);
+      await changeStatusAction(confirmId);
+      setConfirmId(null);
+    } finally {
+      setPendingStatusId(null);
     }
   };
 
@@ -340,7 +377,7 @@ function Page() {
           color="primary"
           variant="flat"
           onPress={() => handleChangeStatus(item.id)}
-          isLoading={isChangingStatus}
+          isLoading={pendingStatusId === item.id && isChangingStatus}
         >
           Confirm
         </Button>
@@ -561,13 +598,51 @@ function Page() {
                     disableSubmit || !selectedStudentId || !caseOptions.length
                   }
                 >
-                  {disableSubmit && (
+                  {isUpdatingAppointment && editItem && (
                     <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
                   )}
                   {editItem ? "Update" : "Add"}
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {confirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm">
+            <CustomAlert
+              color="warning"
+              title="Are you sure?"
+              description="Do you want to change the appointment status?"
+              confirmText="Sure"
+              cancelText="Cancel"
+              onConfirm={handleConfirmChangeStatus}
+              onCancel={() => setConfirmId(null)}
+              isConfirmLoading={
+                pendingStatusId === confirmId && isChangingStatus
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm">
+            <CustomAlert
+              color="danger"
+              title="Delete appointment?"
+              description="This action cannot be undone."
+              confirmText="Delete"
+              cancelText="Cancel"
+              onConfirm={handleConfirmDelete}
+              onCancel={() => setDeleteId(null)}
+              isConfirmLoading={
+                pendingDeleteId === deleteId && isDeletingAppointment
+              }
+            />
           </div>
         </div>
       )}
