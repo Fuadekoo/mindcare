@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@heroui/react";
 import { CustomCard } from "@/components/custom-card";
+import CustomAlert from "@/components/custom-alert";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
@@ -83,6 +84,9 @@ function Page() {
     },
   ]);
 
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   // Fetch students and problem types for the dropdowns
   useEffect(() => {
     const fetchDataForSelects = async () => {
@@ -133,11 +137,20 @@ function Page() {
     setShowModal(true);
   };
 
-  const handleDeleteCase = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this case?")) {
-      await deleteAction(id);
-      addToast({ title: "Success", description: "Case has been deleted." });
+  const handleDeleteCase = (id: string) => {
+    setDeleteId(id);
+  };
+
+  // Confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      setPendingDeleteId(deleteId);
+      await deleteAction(deleteId);
+      setDeleteId(null);
       refreshCases();
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
@@ -313,6 +326,23 @@ function Page() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-sm">
+            <CustomAlert
+              color="danger"
+              title="Delete appointment?"
+              description="This action cannot be undone."
+              confirmText="Delete"
+              cancelText="Cancel"
+              onConfirm={handleConfirmDelete}
+              onCancel={() => setDeleteId(null)}
+              isConfirmLoading={pendingDeleteId === deleteId && isDeleting}
+            />
           </div>
         </div>
       )}

@@ -31,6 +31,38 @@ function formatDate(dateString: string) {
   const date = new Date(dateString);
   return date.toLocaleDateString() + " " + date.toLocaleTimeString();
 }
+const toastSuccess = (description: string, title = "Success") =>
+  addToast({
+    title,
+    description,
+    color: "success", // Use green for success
+    variant: "solid",
+    icon: <Check className="text-green-600" />, // Optional: add a green check icon
+  });
+
+const toastError = (description: string, title = "Error") =>
+  addToast({
+    title,
+    description,
+    color: "warning", // Use red for error
+    variant: "solid",
+    icon: <X className="text-red-600" />, // Optional: add a red X icon
+  });
+
+const handleActionCompletion = (
+  response: { error?: string; message?: string } | null | undefined,
+  successMessage: string,
+  onSuccess?: () => void
+) => {
+  if (response && !response.error) {
+    toastSuccess(response?.message || successMessage);
+    onSuccess?.();
+  } else {
+    toastError(
+      response?.error || response?.message || "An unexpected error occurred."
+    );
+  }
+};
 
 function EditableSection({
   title,
@@ -122,13 +154,8 @@ function Page() {
       caseDetails,
       [
         true,
-        (response) => {
-          if (!response) {
-            addToast({
-              title: "Error",
-              description: "Failed to load case details.",
-            });
-          }
+        (res) => {
+          res ? undefined : toastError("Failed to load case details.");
         },
       ],
       caseId as string
@@ -136,19 +163,12 @@ function Page() {
 
   const [, actionStatus, isLoadingStatus] = useAction(changeCaseStatus, [
     ,
-    (response) => {
-      if (response) {
-        addToast({
-          title: "Success",
-          description: "Case status updated successfully.",
-        });
-        refreshCaseDetails();
-      } else {
-        addToast({
-          title: "Error",
-          description: "Failed to update case status.",
-        });
-      }
+    (res) => {
+      handleActionCompletion(
+        res,
+        "Case status updated successfully.",
+        refreshCaseDetails
+      );
     },
   ]);
 
@@ -156,13 +176,8 @@ function Page() {
     getallDiagnosisPerCase,
     [
       true,
-      (response) => {
-        if (!response) {
-          addToast({
-            title: "Error",
-            description: "Failed to load diagnoses.",
-          });
-        }
+      (res) => {
+        res ? undefined : toastError("Failed to load diagnoses.");
       },
     ],
     caseId as string
@@ -172,13 +187,8 @@ function Page() {
     getallObservationPerCase,
     [
       true,
-      (response) => {
-        if (!response) {
-          addToast({
-            title: "Error",
-            description: "Failed to load observations.",
-          });
-        }
+      (res) => {
+        res ? undefined : toastError("Failed to load observations.");
       },
     ],
     caseId as string
@@ -188,13 +198,8 @@ function Page() {
     getallTreatmentPerCase,
     [
       true,
-      (response) => {
-        if (!response) {
-          addToast({
-            title: "Error",
-            description: "Failed to load treatments.",
-          });
-        }
+      (res) => {
+        res ? undefined : toastError("Failed to load treatments.");
       },
     ],
     caseId as string
@@ -205,19 +210,12 @@ function Page() {
     createDiagnosis,
     [
       ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Diagnosis created successfully.",
-          });
-          refreshDiagnosis();
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to create diagnosis.",
-          });
-        }
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Diagnosis created successfully.",
+          refreshDiagnosis
+        );
       },
     ]
   );
@@ -226,19 +224,12 @@ function Page() {
     deleteDiagnosis,
     [
       ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Diagnosis deleted successfully.",
-          });
-          refreshDiagnosis();
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to delete diagnosis.",
-          });
-        }
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Diagnosis deleted successfully.",
+          refreshDiagnosis
+        );
       },
     ]
   );
@@ -247,19 +238,12 @@ function Page() {
     createObservation,
     [
       ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Observation created successfully.",
-          });
-          refreshObservation();
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to create observation.",
-          });
-        }
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Observation created successfully.",
+          refreshObservation
+        );
       },
     ]
   );
@@ -268,19 +252,12 @@ function Page() {
     deleteObservation,
     [
       ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Observation deleted successfully.",
-          });
-          refreshObservation();
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to delete observation.",
-          });
-        }
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Observation deleted successfully.",
+          refreshObservation
+        );
       },
     ]
   );
@@ -289,19 +266,12 @@ function Page() {
     createTreatment,
     [
       ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Treatment created successfully.",
-          });
-          refreshTreatment();
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to create treatment.",
-          });
-        }
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Treatment created successfully.",
+          refreshTreatment
+        );
       },
     ]
   );
@@ -310,19 +280,12 @@ function Page() {
     deleteTreatment,
     [
       ,
-      (response) => {
-        if (response) {
-          addToast({
-            title: "Success",
-            description: "Treatment deleted successfully.",
-          });
-          refreshTreatment();
-        } else {
-          addToast({
-            title: "Error",
-            description: "Failed to delete treatment.",
-          });
-        }
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Treatment deleted successfully.",
+          refreshTreatment
+        );
       },
     ]
   );
@@ -331,18 +294,12 @@ function Page() {
     lastCaseUpdate,
     [
       true,
-      (response) => {
-        if (!response) {
-          addToast({
-            title: "Error",
-            description: "Failed to load last update.",
-          });
-        }
+      (res) => {
+        res ? undefined : toastError("Failed to load last update.");
       },
     ],
     caseId as string
   );
-  console.log("Last update:>>>", lastUpdate);
 
   // Memoized data transformation
   const diagnosesItems = useMemo(() => {
@@ -391,7 +348,7 @@ function Page() {
         <button
           type="button"
           className="text-primary-800 font-semibold text-lg"
-          onClick={() => (window.location.href = "/en/case")}
+          onClick={() => (window.location.href = "/en/generalCase")}
           aria-label="Go back to case list"
         >
           <ArrowLeft />
