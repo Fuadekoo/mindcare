@@ -35,18 +35,20 @@ const toastSuccess = (description: string, title = "Success") =>
   addToast({
     title,
     description,
-    color: "success", // Use green for success
-    variant: "solid",
-    icon: <Check className="text-green-600" />, // Optional: add a green check icon
+    color: "secondary", // Use a primary color for text
+    variant: "flat",
+    // icon: <Check className="text-green-300" />, // Green check icon for success
+    // className: "bg-gray-100 text-primary-800", // Grey background, good text color
   });
 
 const toastError = (description: string, title = "Error") =>
   addToast({
     title,
     description,
-    color: "warning", // Use red for error
-    variant: "solid",
-    icon: <X className="text-red-600" />, // Optional: add a red X icon
+    color: "primary", // Use a primary color for text
+    variant: "flat",
+    // icon: <X className="text-pink-300" />, // Red X icon for error
+    // className: "bg-gray-100 text-primary-800", // Grey background, good text color
   });
 
 const handleActionCompletion = (
@@ -145,7 +147,10 @@ function EditableSection({
 }
 
 function Page() {
-  const { caseId } = useParams<{ caseId: string }>();
+  const { caseId, generalCaseId } = useParams<{
+    caseId: string;
+    generalCaseId: string;
+  }>();
 
   // --- Data Fetching & Action Hooks ---
 
@@ -351,7 +356,9 @@ function Page() {
         <button
           type="button"
           className="text-primary-800 font-semibold text-lg"
-          onClick={() => (window.location.href = "/en/generalCase")}
+          onClick={() =>
+            (window.location.href = `/en/generalCase/${generalCaseId}`)
+          }
           aria-label="Go back to case list"
         >
           <ArrowLeft />
@@ -359,7 +366,7 @@ function Page() {
         <h1 className="text-2xl font-bold text-primary-800 tracking-tight">
           Case Details
         </h1>
-        <span className="ml-auto text-sm bg-red-300 text-primary-400 font-medium flex items-center gap-2">
+        <span className="ml-auto text-sm text-primary-400 font-medium flex items-center gap-2">
           Last update:{" "}
           {isLoadingLastUpdate ? (
             <Loader2 className="animate-spin text-primary-500 ml-1" size={16} />
