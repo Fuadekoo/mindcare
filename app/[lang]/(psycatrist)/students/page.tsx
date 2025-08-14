@@ -306,7 +306,7 @@ function Page() {
       country,
       status,
       StudentGeneralCase,
-      // history,
+      history: rawHistory,
     } = student;
     return {
       key,
@@ -317,7 +317,7 @@ function Page() {
       country: country ?? "",
       status: status ?? "",
       StudentGeneralCase: StudentGeneralCase || [],
-      history: history,
+      history: Array.isArray(rawHistory) ? rawHistory : [], // <- ensure array
     };
   });
 
@@ -466,9 +466,8 @@ function Page() {
       label: "Appointment List",
       renderCell: (item: Student) => {
         const appointmentArr = Array.isArray(item.history)
-          ? item.history.reduce(
-              (acc, cc) => [...acc, ...cc.appointment],
-              [] as { id: string; status: string }[]
+          ? item.history.flatMap((cc: any) =>
+              Array.isArray(cc?.appointment) ? cc.appointment : []
             )
           : [];
         if (appointmentArr.length === 0) {
@@ -476,10 +475,12 @@ function Page() {
         }
         return (
           <div className="flex flex-wrap gap-2 items-center">
-            {appointmentArr.map((appt, idx) => (
+            {appointmentArr.map((appt: any, idx: number) => (
               <button
-                key={appt.id}
-                onClick={() => handleOpenAppointmentDetailModal(appt.id)}
+                key={appt.id ?? `${idx}`}
+                onClick={() =>
+                  appt?.id && handleOpenAppointmentDetailModal(appt.id)
+                }
                 className="text-sm text-blue-600 hover:underline hover:text-blue-800 bg-blue-100 px-2 py-1 rounded-md"
               >
                 {`P${idx + 1}`}
@@ -737,7 +738,7 @@ function Page() {
               <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Case
+                    Case from open General case
                   </label>
                   <select
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"

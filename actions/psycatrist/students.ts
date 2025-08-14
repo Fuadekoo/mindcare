@@ -56,9 +56,9 @@ export async function getStudents(
         },
         history: {
           select: {
-            id: true,
-            solved: true,
-            priority: true,
+            // id: true,
+            // solved: true,
+            // priority: true,
             appointment: {
               select: { id: true, status: true },
               orderBy: { createdAt: "asc" },

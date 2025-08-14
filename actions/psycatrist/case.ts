@@ -89,6 +89,16 @@ export async function createCaseCard2(
   note?: string
 ) {
   try {
+    const gc = await prisma.studentGeneralCase.findUnique({
+      where: { id: studentGeneralCaseId },
+      select: { status: true },
+    });
+    if (!gc) {
+      return { message: "General case not found" };
+    }
+    if (gc.status !== "open") {
+      return { message: "Cannot create case. General case is closed." };
+    }
     const maxPriority = await prisma.history.aggregate({
       where: { studentId: studentId },
       _max: { priority: true },
@@ -302,7 +312,11 @@ export async function caseDetails(caseId: string) {
 export async function getCasePerStudent(id: number) {
   try {
     const cases = await prisma.history.findMany({
-      where: { student: { wdt_ID: id }, solved: false },
+      where: {
+        student: { wdt_ID: id },
+        solved: false,
+        StudentGeneralCase: { status: "open" },
+      },
       select: {
         id: true,
         createdAt: true,

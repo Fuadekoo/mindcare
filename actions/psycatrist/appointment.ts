@@ -76,6 +76,7 @@ export async function createAppointment(data: {
   date: Date;
   time: string;
 }) {
+  
   const schema = z.object({
     caseId: z.string().min(1, "Case ID is required"),
     date: z.coerce.date(),
