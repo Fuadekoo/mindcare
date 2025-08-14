@@ -19,23 +19,24 @@ model user {
 }
 
 model student {
-  wdt_ID               Int                 @id @default(autoincrement())
-  name                 String?
-  passcode             String?             @unique
-  phoneno              String?             @unique
-  country              String?
-  status               String?
-  isKid                Boolean?            @default(false)
-  ustaz                String?
-  subject              String?
-  package              String?
-  youtubeSubject       String?
-  chat_id              String?             @default("")
-  u_control            String?             @db.VarChar(255)
-  progressTracking     progressTracking[]
-  StudentGeneralCase   StudentGeneralCase?
-  studentGeneralCaseId String?
-  history              history[]
+  wdt_ID             Int                  @id @default(autoincrement())
+  name               String?
+  passcode           String?              @unique
+  phoneno            String?              @unique
+  country            String?
+  status             String?
+  isKid              Boolean?             @default(false)
+  ustaz              String?
+  subject            String?
+  package            String?
+  youtubeSubject     String?
+  chat_id            String?              @default("")
+  u_control          String?              @db.VarChar(255)
+  progressTracking   progressTracking[]
+  // StudentGeneralCase   StudentGeneralCase?
+  // studentGeneralCaseId String?
+  history            history[]
+  StudentGeneralCase StudentGeneralCase[]
 
   @@map("wpos_wpdatatable_23")
 }
@@ -54,12 +55,17 @@ model appointment {
 
 model StudentGeneralCase {
   id        String    @id @default(cuid())
-  studentId Int       @unique
+  studentId Int
   status    String    @default("open")
+  // Nullable flag: 1 when open, NULL otherwise
+  openFlag  Int?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   student   student   @relation(fields: [studentId], references: [wdt_ID])
   history   history[]
+
+  // Enforce: at most one "open" per student (NULLs are allowed multiple times)
+  @@unique([studentId, openFlag], map: "uniq_student_open_case")
 }
 
 // history model (it has a diagonistic,obervation, and treatmentor medication)

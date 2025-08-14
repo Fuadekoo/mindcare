@@ -1,6 +1,5 @@
 "use server";
 
-
 import prisma from "@/lib/db";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -310,10 +309,10 @@ export async function getCasePerStudent(id: number) {
       },
       orderBy: { createdAt: "asc" },
     });
-    console.log("Cases for student:", cases);
+    // console.log("Cases for student:", cases);
     return { data: cases };
   } catch (error) {
-    console.error("Error fetching cases for student:", error);
+    // console.error("Error fetching cases for student:", error);
     return { data: [] };
   }
 }
@@ -357,20 +356,20 @@ export async function rejectOldPendingAppointments() {
 // i went the last update of the case from the history,observation and treatment get the createat then the recent one
 export async function lastCaseUpdate(caseId: string) {
   try {
-    console.log("lasted update1");
+    // console.log("lasted update1");
     // Get updatedAt from history
     const history = await prisma.history.findUnique({
       where: { id: caseId },
       select: { updatedAt: true },
     });
-    console.log("lasted update1", history);
+    // console.log("lasted update1", history);
     // Get latest createdAt from observation
     const observation = await prisma.observation.findFirst({
       where: { historyId: caseId },
       orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
-    console.log("lasted update1", observation);
+    // console.log("lasted update1", observation);
 
     // Get latest createdAt from treatment
     const treatment = await prisma.treatment.findFirst({
@@ -378,7 +377,7 @@ export async function lastCaseUpdate(caseId: string) {
       orderBy: { createdAt: "desc" },
       select: { createdAt: true },
     });
-    console.log("lasted update1", treatment);
+    // console.log("lasted update1", treatment);
 
     const dates = [
       history?.updatedAt,
@@ -413,5 +412,24 @@ export async function lastCaseUpdate(caseId: string) {
   } catch (error) {
     console.error("Error fetching last case update:", error);
     return null;
+  }
+}
+
+export async function getCasePerGeneralCase(GeneralCaseId: string) {
+  try {
+    const cases = await prisma.history.findMany({
+      where: { studentGeneralCaseId: GeneralCaseId },
+      select: {
+        id: true,
+        solved: true,
+        priority: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+    return { data: cases };
+  } catch (error) {
+    console.error("Error fetching cases for general case:", error);
+    return { data: [] };
   }
 }

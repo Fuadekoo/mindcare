@@ -243,12 +243,6 @@ function Page() {
     setShowModal(true);
   };
 
-  // const handleDelete = async (id: string) => {
-  //   if (window.confirm("Delete this appointment?")) {
-  //     await deleteAction(id);
-  //   }
-  // };
-
   const handleDelete = (id: string) => {
     setDeleteId(id);
   };
@@ -264,12 +258,6 @@ function Page() {
       setPendingDeleteId(null);
     }
   };
-
-  // const handleChangeStatus = async (id: string) => {
-  //   if (window.confirm("Change status of this appointment?")) {
-  //     await changeStatusAction(id);
-  //   }
-  // };
 
   const handleChangeStatus = (id: string) => {
     setConfirmId(id);

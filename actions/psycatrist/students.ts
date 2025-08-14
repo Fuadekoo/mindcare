@@ -84,10 +84,10 @@ export async function getStudents(
         : [],
     }));
 
-    console.log("Students fetched:", data);
+    // console.log("Students fetched:", data);
     // console.table(data.map((item) => item.history.map((h) => h.appointment)));
-    console.table(adaptedData.map((item) => item.appointment));
-    console.log("Adapted students:", adaptedData);
+    // console.table(adaptedData.map((item) => item.appointment));
+    // console.log("Adapted students:", adaptedData);
 
     return {
       data: adaptedData,

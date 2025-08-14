@@ -12,16 +12,16 @@ export async function authenticate(
   try {
     // console.log("sign in with data", data);
     // result = await signIn("credentials", { ...data, redirect: false });
-    console.log("credentials >> ", data);
+    // console.log("credentials >> ", data);
     await signIn("credentials", {
       phone: data.phone,
       password: data.password,
       redirect: false,
     });
-    console.log("sign in successfully");
+    // console.log("sign in successfully");
     return { message: "Login successful" };
   } catch (error) {
-    console.log("sign in failed", error);
+    // console.log("sign in failed", error);
     return { message: "Invalid credentials" };
   }
 }

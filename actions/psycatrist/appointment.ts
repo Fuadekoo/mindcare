@@ -274,7 +274,7 @@ export async function getTodayAppointments(page?: number, pageSize?: number) {
       skip: (page - 1) * pageSize,
       take: pageSize,
     });
-    console.log("Today's appointments:", data);
+    // console.log("Today's appointments:", data);
 
     return {
       data,

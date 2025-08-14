@@ -11,6 +11,7 @@ export async function getAllGeneralCasePerStudent(studentId: number) {
         createdAt: true,
       },
     });
+    console.log("General cases for student:>><<", generalCases);
     return generalCases;
   } catch (error) {
     console.error("Error fetching general cases:", error);
@@ -78,6 +79,7 @@ export async function createGeneralCase(studentId: number) {
     await prisma.studentGeneralCase.create({
       data: {
         studentId,
+        openFlag: 1,
       },
     });
     return { success: true, message: "General case created successfully" };
@@ -92,6 +94,7 @@ export async function updateGeneralCase(generalCaseId: string) {
     where: { id: generalCaseId },
     data: {
       status: "closed",
+      openFlag: null,
     },
   });
   return { message: "General case updated successfully" };
@@ -111,7 +114,7 @@ export async function deleteGeneralCase(generalCaseId: string) {
 
 export async function getGeneralCaseByStudentId(studentId: number) {
   try {
-    const generalCase = await prisma.studentGeneralCase.findUnique({
+    const generalCase = await prisma.studentGeneralCase.findFirst({
       where: { studentId },
       select: {
         id: true,
