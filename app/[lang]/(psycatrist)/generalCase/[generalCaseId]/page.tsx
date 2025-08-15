@@ -17,7 +17,7 @@ import {
   patientTypeData,
 } from "@/actions/psycatrist/case";
 import { getStudents } from "@/actions/psycatrist/students";
-import { caseSchema } from "@/lib/zodSchema";
+import { case3Schema } from "@/lib/zodSchema";
 import { useParams } from "next/navigation";
 
 // Type for student data for the dropdown
@@ -117,8 +117,8 @@ function Page() {
     reset,
     control,
     formState: { errors },
-  } = useForm<z.infer<typeof caseSchema>>({
-    resolver: zodResolver(caseSchema),
+  } = useForm<z.infer<typeof case3Schema>>({
+    resolver: zodResolver(case3Schema),
     defaultValues: {
       // solved: false,
     },
@@ -130,7 +130,7 @@ function Page() {
   // --- Event Handlers ---
   const handleAddCase = () => {
     reset({
-      studentId: 0,
+      studentGeneralCaseId: generalCaseId,
       problemTypeId: "",
       note: "",
     });
@@ -154,7 +154,7 @@ function Page() {
     }
   };
 
-  const onSubmit = async (data: z.infer<typeof caseSchema>) => {
+  const onSubmit = async (data: z.infer<typeof case3Schema>) => {
     await createAction(
       data.studentGeneralCaseId,
       // data.studentId,

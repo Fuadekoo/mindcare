@@ -96,7 +96,7 @@ function Page() {
     }
   };
 
-  const isDeletingAppointment = isDeleting;
+  // const isDeletingAppointment = isDeleting;
 
   // --- Memoized Data for Rendering ---
   const tasks: Task[] = useMemo(

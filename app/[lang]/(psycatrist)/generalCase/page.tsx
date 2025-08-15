@@ -139,7 +139,7 @@ function Page() {
         const res = await getStudents("", 1, 1000);
         if (Array.isArray(res?.data)) {
           setStudentOptions(
-            res.data.map((s: any) => ({
+            res.data.map((s) => ({
               value: s.wdt_ID,
               label: `${s.wdt_ID} - ${s.name ?? "Unnamed"}`,
             }))
@@ -214,13 +214,14 @@ function Page() {
   const cases: GeneralCaseRecord[] = useMemo(
     () =>
       Array.isArray(generalCasesResponse?.data)
-        ? (generalCasesResponse.data as any[]).map((item) => ({
+        ? generalCasesResponse.data.map((item) => ({
             ...item,
             createdAt:
               typeof item.createdAt === "string"
                 ? item.createdAt
-                : item.createdAt instanceof Date
-                ? item.createdAt.toISOString()
+                : Object.prototype.toString.call(item.createdAt) ===
+                  "[object Date]"
+                ? (item.createdAt as Date).toISOString()
                 : "",
           }))
         : [],

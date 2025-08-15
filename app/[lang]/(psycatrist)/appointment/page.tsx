@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import CustomTable from "@/components/custom-table";
 import CustomAlert from "@/components/custom-alert";
-import { Alert, Button } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
@@ -196,12 +196,12 @@ function Page() {
         if (mapped.length === 1) {
           setValue("caseId", mapped[0].value);
         } else {
-          setValue("caseId", undefined as any);
+          setValue("caseId", "");
         }
       } catch (e) {
         console.error("Error loading cases:", e);
         setCaseOptions([]);
-        setValue("caseId", undefined as any);
+        setValue("caseId", "");
       } finally {
         setIsLoadingCases(false);
       }
@@ -213,7 +213,7 @@ function Page() {
   useEffect(() => {
     if (selectedStudentId == null) {
       setCaseOptions([]);
-      setValue("caseId", undefined as any);
+      setValue("caseId", "");
       return;
     }
     fetchCases(selectedStudentId);

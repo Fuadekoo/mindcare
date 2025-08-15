@@ -39,6 +39,15 @@ export const caseSchema = z.object({
 });
 export type CaseType = z.infer<typeof caseSchema>;
 
+export const case3Schema = z.object({
+  studentGeneralCaseId: z
+    .string()
+    .min(1, "Student general case ID is required."),
+  problemTypeId: z.string().min(3, "Problem type is required."),
+  note: z.string().optional(),
+});
+export type Case3Type = z.infer<typeof case3Schema>;
+
 // This schema is used for appointment creation and updates
 export const appointmentSchema = z.object({
   caseId: z.string().min(1, "Case ID is required."),

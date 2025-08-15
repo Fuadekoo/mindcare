@@ -7,7 +7,6 @@ import { getStudents } from "@/actions/psycatrist/students";
 import {
   getAllGeneralCasePerStudent,
   createGeneralCase,
-  updateGeneralCase,
 } from "@/actions/psycatrist/generalCase";
 import {
   createCaseCard2,
@@ -74,12 +73,12 @@ function Page() {
     string | null
   >(null);
 
-  const [expandedGeneralCaseId, setExpandedGeneralCaseId] = useState<
-    string | null
-  >(null);
-  const [casesForGeneralCase, setCasesForGeneralCase] = useState<CaseItem[]>(
-    []
-  );
+  // const [expandedGeneralCaseId, setExpandedGeneralCaseId] = useState<
+  //   string | null
+  // >(null);
+  // const [casesForGeneralCase, setCasesForGeneralCase] = useState<CaseItem[]>(
+  //   []
+  // );
 
   // Per-row selection + loaded cases per GC
   const [selectedGCByStudent, setSelectedGCByStudent] = useState<

@@ -5,7 +5,6 @@ import { ArrowLeft, X, ToggleLeft, ToggleRight, Check } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import useAction from "@/hooks/useActions";
 import { addToast } from "@heroui/toast";
-import { useParams } from "next/navigation";
 import {
   caseDetails,
   changeCaseStatus,
