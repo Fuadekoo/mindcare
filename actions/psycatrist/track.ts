@@ -11,7 +11,7 @@ export async function getTrack(
     const where = {
       status: { in: ["Active", "Not yet"] }, // <-- Add this line
       StudentGeneralCase: {
-        isNot: null,
+        some: {},
       },
       ...(search
         ? {
@@ -35,6 +35,11 @@ export async function getTrack(
       select: {
         wdt_ID: true,
         name: true,
+        StudentGeneralCase: {
+          select: {
+            id: true,
+          },
+        },
         history: {
           select: {
             solved: true,
@@ -52,6 +57,7 @@ export async function getTrack(
 
     // Process the fetched data to create the desired output structure
     const data = studentsWithHistory.map((student) => {
+      const totalGeneralCase = student.StudentGeneralCase.length;
       const totalProblems = student.history.length;
       const solved = student.history.filter((h) => h.solved).length;
       const pending = totalProblems - solved;
@@ -63,6 +69,7 @@ export async function getTrack(
       return {
         id: student.wdt_ID,
         name: student.name,
+        totalGeneralCase,
         totalProblems,
         solved,
         pending,

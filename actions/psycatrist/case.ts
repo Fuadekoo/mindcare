@@ -122,6 +122,50 @@ export async function createCaseCard2(
   }
 }
 
+export async function createCaseCard3(
+  studentGeneralCaseId: string,
+  patientTypeData: string,
+  note?: string
+) {
+  try {
+    // Get GC status and its studentId
+    const gc = await prisma.studentGeneralCase.findUnique({
+      where: { id: studentGeneralCaseId },
+      select: { status: true, studentId: true },
+    });
+    if (!gc) {
+      return { error: "General case not found" };
+    }
+    if (gc.status !== "open") {
+      return { error: "Cannot create case. General case is closed." };
+    }
+
+    const studentId = gc.studentId;
+
+    // Next priority for this student
+    const maxPriority = await prisma.history.aggregate({
+      where: { studentId },
+      _max: { priority: true },
+    });
+    const nextPriority = (maxPriority._max.priority ?? 0) + 1;
+
+    await prisma.history.create({
+      data: {
+        priority: nextPriority,
+        studentGeneralCaseId,
+        studentId,
+        patientTypeData,
+        note,
+      },
+    });
+
+    return { message: "Case card created successfully" };
+  } catch (error) {
+    console.error("Error creating case card:", error);
+    return { error: "Failed to create case card" };
+  }
+}
+
 export async function deleteCaseCard(id: string) {
   try {
     await prisma.history.delete({

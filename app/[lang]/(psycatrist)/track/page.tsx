@@ -47,6 +47,8 @@ function Page() {
       key: String(item.id),
       id: String(item.id),
       name: item.name ?? "",
+      totalGeneralCase:
+        item.totalGeneralCase != null ? String(item.totalGeneralCase) : "0",
       totalProblems:
         item.totalProblems != null ? String(item.totalProblems) : "0",
       solved: item.solved != null ? String(item.solved) : "0",
@@ -75,6 +77,11 @@ function Page() {
       key: "name",
       label: "Name",
       renderCell: (item) => item.name,
+    },
+    {
+      key: "totalGeneralCase",
+      label: "Total General Cases",
+      renderCell: (item) => item.totalGeneralCase,
     },
     {
       key: "totalProblems",

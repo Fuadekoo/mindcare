@@ -449,7 +449,7 @@ function Page() {
               return (
                 <Link
                   key={c.id}
-                  href={`/en/case/${c.id}`}
+                  href={`/en/generalCase/${gcId}/${c.id}`}
                   className="text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-md"
                   title={label}
                 >
@@ -919,7 +919,11 @@ function Page() {
               {/* Replace Close button with Go to Case button */}
               {appointmentDetailResponse?.case?.id && (
                 <Link
-                  href={`/en/case/${appointmentDetailResponse.case.id}`}
+                  href={
+                    appointmentDetailResponse.case?.studentGeneralCaseId
+                      ? `/en/generalCase/${appointmentDetailResponse.case.studentGeneralCaseId}/${appointmentDetailResponse.case.id}`
+                      : `/en/generalCase/${appointmentDetailResponse.case.id}`
+                  }
                   className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium bg-violet-100 text-violet-700 hover:bg-violet-200 transition"
                 >
                   Go to Case

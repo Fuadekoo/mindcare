@@ -12,7 +12,7 @@ import useAction from "@/hooks/useActions";
 import Select from "react-select";
 import {
   getCaseCard,
-  createCaseCard,
+  createCaseCard3,
   deleteCaseCard,
   patientTypeData,
 } from "@/actions/psycatrist/case";
@@ -46,7 +46,7 @@ function Page() {
     page,
     perPage
   );
-  const [, createAction, isCreating] = useAction(createCaseCard, [
+  const [, createAction, isCreating] = useAction(createCaseCard3, [
     ,
     (response) => {
       if (response) {
@@ -157,7 +157,7 @@ function Page() {
   const onSubmit = async (data: z.infer<typeof caseSchema>) => {
     await createAction(
       data.studentGeneralCaseId,
-      data.studentId,
+      // data.studentId,
       data.problemTypeId,
       data.note
     );
@@ -216,55 +216,6 @@ function Page() {
             </h2>
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="flex flex-col gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Patient
-                  </label>
-                  <Controller
-                    name="studentId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        options={studentOptions}
-                        placeholder="Search and select a patient..."
-                        isClearable
-                        isSearchable
-                        isDisabled={isSubmitting}
-                        onChange={(option) =>
-                          field.onChange(option ? option.value : "")
-                        }
-                        value={studentOptions.find(
-                          (c) => c.value === field.value
-                        )}
-                        styles={{
-                          control: (base) => ({
-                            ...base,
-                            borderRadius: "0.75rem",
-                            borderColor: "#a78bfa",
-                            boxShadow: "0 0 0 2px #a78bfa33",
-                            minHeight: "48px",
-                          }),
-                          option: (base, state) => ({
-                            ...base,
-                            backgroundColor: state.isSelected
-                              ? "#a78bfa"
-                              : state.isFocused
-                              ? "#f3e8ff"
-                              : "white",
-                            color: state.isSelected ? "white" : "#4b5563",
-                            fontWeight: state.isSelected ? "bold" : "normal",
-                          }),
-                        }}
-                      />
-                    )}
-                  />
-                  {errors.studentId && (
-                    <span className="text-red-500 text-xs mt-1">
-                      {errors.studentId.message}
-                    </span>
-                  )}
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Problem Type

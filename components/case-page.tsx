@@ -146,11 +146,11 @@ function EditableSection({
   );
 }
 
-function Page() {
-  const { caseId, generalCaseId } = useParams<{
-    caseId: string;
-    generalCaseId: string;
-  }>();
+function caseComponent(caseId: string, generalCaseId: string) {
+  //   const { caseId, generalCaseId } = useParams<{
+  //     caseId: string;
+  //     generalCaseId: string;
+  //   }>();
 
   // --- Data Fetching & Action Hooks ---
 
@@ -495,4 +495,4 @@ function Page() {
   );
 }
 
-export default Page;
+export default caseComponent;
