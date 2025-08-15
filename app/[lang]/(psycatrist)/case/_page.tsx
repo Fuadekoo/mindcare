@@ -28,9 +28,9 @@ function Page() {
   const [showModal, setShowModal] = useState(false);
   // const [problemTypes, setProblemTypes] = useState<ProblemType[]>([]);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
-  const [search] = useState("");
-  const [page] = useState(1);
-  const [perPage] = useState(10);
+  const [, search] = useState("");
+  const [, page] = useState(1);
+  const [, perPage] = useState(10);
 
   // --- Data Fetching & Action Hooks ---
   const [casesResponse, refreshCases, isLoadingCases] = useAction(

@@ -4,10 +4,7 @@ import Link from "next/link";
 import CustomTable from "@/components/custom-table";
 import useAction from "@/hooks/useActions";
 import { getStudents } from "@/actions/psycatrist/students";
-import {
-  getAllGeneralCasePerStudent,
-  createGeneralCase,
-} from "@/actions/psycatrist/generalCase";
+import { createGeneralCase } from "@/actions/psycatrist/generalCase";
 import {
   createCaseCard2,
   patientTypeData,
@@ -41,7 +38,7 @@ type Student = {
     solved: boolean;
     appointment: { id: string; status: string }[];
   }[];
-  appointment: { id: string; status: string }[];
+  // appointment: { id: string; status: string }[];
   wdt_ID?: number;
   phoneno?: string;
   country?: string;
@@ -50,6 +47,7 @@ type Student = {
 
 type CaseItem = { id: string; createdAt: string };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface ColumnDef<T = any> {
   key: string;
   label: string;
@@ -72,13 +70,6 @@ function Page() {
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<
     string | null
   >(null);
-
-  // const [expandedGeneralCaseId, setExpandedGeneralCaseId] = useState<
-  //   string | null
-  // >(null);
-  // const [casesForGeneralCase, setCasesForGeneralCase] = useState<CaseItem[]>(
-  //   []
-  // );
 
   // Per-row selection + loaded cases per GC
   const [selectedGCByStudent, setSelectedGCByStudent] = useState<
@@ -106,29 +97,29 @@ function Page() {
     [true, () => {}]
   );
 
-  const [caseData, perGeneralCaseAction, isLoadingGeneralCase] = useAction(
-    getCasePerGeneralCase,
-    [, () => {}]
-  );
+  // const [caseData, perGeneralCaseAction, isLoadingGeneralCase] = useAction(
+  //   getCasePerGeneralCase,
+  //   [, () => {}]
+  // );
 
-  const [caseResponse, perStudentCaseAction, isLoadingCase] = useAction(
-    getCasePerStudent,
-    [, () => {}]
-  );
+  // const [caseResponse, perStudentCaseAction, isLoadingCase] = useAction(
+  //   getCasePerStudent,
+  //   [, () => {}]
+  // );
 
   const [studentCases, setStudentCases] = useState<CaseItem[]>([]);
 
-  const [generalCaseResponse, getGeneralCaseAction, isLoadingGeneralCases] =
-    useAction(getAllGeneralCasePerStudent, [
-      ,
-      (generalCaseResponse) => {
-        console.log("General cases fetched:", generalCaseResponse);
-      },
-    ]);
+  // const [generalCaseResponse, getGeneralCaseAction, isLoadingGeneralCases] =
+  //   useAction(getAllGeneralCasePerStudent, [
+  //     ,
+  //     (generalCaseResponse) => {
+  //       console.log("General cases fetched:", generalCaseResponse);
+  //     },
+  //   ]);
 
-  const [generalCasesPerStudent, setGeneralCasesPerStudent] = useState<
-    { id: string; createdAt: string }[]
-  >([]);
+  // const [generalCasesPerStudent, setGeneralCasesPerStudent] = useState<
+  //   { id: string; createdAt: string }[]
+  // >([]);
 
   const [appointmentDetailResponse, , isLoadingAppointmentDetail] = useAction(
     getAppointmentById,
@@ -274,11 +265,11 @@ function Page() {
     );
   };
 
-  const onGeneralCaseSubmit = async (
-    data: z.infer<typeof generalCaseSchema>
-  ) => {
-    await createGeneralCaseAction(data.studentId);
-  };
+  // const onGeneralCaseSubmit = async (
+  //   data: z.infer<typeof generalCaseSchema>
+  // ) => {
+  //   await createGeneralCaseAction(data.studentId);
+  // };
 
   const onAppointmentSubmit = async (
     data: z.infer<typeof appointmentSchema>
@@ -289,6 +280,7 @@ function Page() {
 
   // Rows
   const rows: Student[] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (studentsResponse?.data || []).map((student: any) => ({
       key: String(student.wdt_ID),
       id: student.wdt_ID,
@@ -308,10 +300,10 @@ function Page() {
       history: rawHistory,
     } = student;
     return {
-      key,
-      id: Number(id),
+      key: String(key),
+      id: String(id),
       name: name ?? "",
-      wdt_ID: wdt_ID ?? 0,
+      wdt_ID: String(wdt_ID ?? ""),
       phoneno: phoneno ?? "",
       country: country ?? "",
       status: status ?? "",
@@ -335,7 +327,7 @@ function Page() {
       try {
         const res = await getCasePerGeneralCase(gcId);
         const list: CaseItem[] = Array.isArray(res?.data)
-          ? res.data.map((item: any) => ({
+          ? res.data.map((item) => ({
               id: item.id,
               createdAt:
                 typeof item.createdAt === "string"
@@ -465,7 +457,7 @@ function Page() {
       label: "Appointment List",
       renderCell: (item: Student) => {
         const appointmentArr = Array.isArray(item.history)
-          ? item.history.flatMap((cc: any) =>
+          ? item.history.flatMap((cc) =>
               Array.isArray(cc?.appointment) ? cc.appointment : []
             )
           : [];
@@ -474,7 +466,7 @@ function Page() {
         }
         return (
           <div className="flex flex-wrap gap-2 items-center">
-            {appointmentArr.map((appt: any, idx: number) => (
+            {appointmentArr.map((appt, idx: number) => (
               <button
                 key={appt.id ?? `${idx}`}
                 onClick={() =>
@@ -743,14 +735,12 @@ function Page() {
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-violet-500"
                     {...appointmentForm.register("caseId")}
                     disabled={
-                      isCreatingAppointment ||
-                      isLoadingCase ||
-                      studentCases.length === 0
+                      isCreatingAppointment || studentCases.length === 0
                     }
                     required
                   >
                     <option value="">
-                      {isLoadingCase
+                      {studentCases.length === 0
                         ? "Loading cases..."
                         : studentCases.length === 0
                         ? "No cases found"

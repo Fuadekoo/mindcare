@@ -71,7 +71,7 @@ const CustomAlert = React.forwardRef<
       <Alert
         ref={ref}
         color={color}
-        variant={variant as any}
+        variant={variant}
         title={title}
         classNames={{
           ...classNames,
@@ -82,14 +82,11 @@ const CustomAlert = React.forwardRef<
             "before:left-0 before:top-[-1px] before:bottom-[-1px] before:w-1",
             "rounded-l-none border-l-0",
             colorClass,
-            (classNames as any)?.base,
+            classNames?.base,
             className
           ),
-          mainWrapper: cn("pt-1", (classNames as any)?.mainWrapper),
-          iconWrapper: cn(
-            "dark:bg-transparent",
-            (classNames as any)?.iconWrapper
-          ),
+          mainWrapper: cn("pt-1", classNames?.mainWrapper),
+          iconWrapper: cn("dark:bg-transparent", classNames?.iconWrapper),
         }}
         {...props}
       >

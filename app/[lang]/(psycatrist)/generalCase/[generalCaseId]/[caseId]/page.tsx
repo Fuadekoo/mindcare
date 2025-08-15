@@ -37,8 +37,6 @@ const toastSuccess = (description: string, title = "Success") =>
     description,
     color: "secondary", // Use a primary color for text
     variant: "flat",
-    // icon: <Check className="text-green-300" />, // Green check icon for success
-    // className: "bg-gray-100 text-primary-800", // Grey background, good text color
   });
 
 const toastError = (description: string, title = "Error") =>
@@ -47,8 +45,6 @@ const toastError = (description: string, title = "Error") =>
     description,
     color: "primary", // Use a primary color for text
     variant: "flat",
-    // icon: <X className="text-pink-300" />, // Red X icon for error
-    // className: "bg-gray-100 text-primary-800", // Grey background, good text color
   });
 
 const handleActionCompletion = (
@@ -160,7 +156,9 @@ function Page() {
       [
         true,
         (res) => {
-          res ? undefined : toastError("Failed to load case details.");
+          if (!res) {
+            toastError("Failed to load case details.");
+          }
         },
       ],
       caseId as string
@@ -182,7 +180,9 @@ function Page() {
     [
       true,
       (res) => {
-        res ? undefined : toastError("Failed to load diagnoses.");
+        if (!res) {
+          toastError("Failed to load diagnoses.");
+        }
       },
     ],
     caseId as string
@@ -193,7 +193,9 @@ function Page() {
     [
       true,
       (res) => {
-        res ? undefined : toastError("Failed to load observations.");
+        if (!res) {
+          toastError("Failed to load observations.");
+        }
       },
     ],
     caseId as string
@@ -204,7 +206,9 @@ function Page() {
     [
       true,
       (res) => {
-        res ? undefined : toastError("Failed to load treatments.");
+        if (!res) {
+          toastError("Failed to load treatments.");
+        }
       },
     ],
     caseId as string

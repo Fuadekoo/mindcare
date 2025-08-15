@@ -289,6 +289,7 @@ function Page() {
 
   // Rows for table
   const rows: AppointmentRow[] =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (appointmentsResponse?.data || []).map((item: any) => ({
       key: String(item.id),
       id: String(item.id),
@@ -421,7 +422,9 @@ function Page() {
 
       <CustomTable
         columns={columns}
-        rows={rows}
+        rows={rows.map((row) =>
+          Object.fromEntries(Object.entries(row).map(([k, v]) => [k, v ?? ""]))
+        )}
         totalRows={appointmentsResponse?.pagination?.totalRecords || 0}
         page={page}
         pageSize={pageSize}

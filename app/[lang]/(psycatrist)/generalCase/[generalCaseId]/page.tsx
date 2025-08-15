@@ -5,11 +5,10 @@ import { CustomCard } from "@/components/custom-card";
 import CustomAlert from "@/components/custom-alert";
 import { addToast } from "@heroui/toast";
 import { z } from "zod";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus } from "lucide-react";
 import useAction from "@/hooks/useActions";
-import Select from "react-select";
 import {
   getCaseCard,
   createCaseCard3,
@@ -32,7 +31,7 @@ function Page() {
 
   const [showModal, setShowModal] = useState(false);
   // const [problemTypes, setProblemTypes] = useState<ProblemType[]>([]);
-  const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
+  const [, setStudentOptions] = useState<StudentOption[]>([]);
   const [search] = useState("");
   const [page] = useState(1);
   const [perPage] = useState(10);
@@ -115,7 +114,6 @@ function Page() {
     handleSubmit,
     register,
     reset,
-    control,
     formState: { errors },
   } = useForm<z.infer<typeof case3Schema>>({
     resolver: zodResolver(case3Schema),
