@@ -84,7 +84,7 @@ function Page() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
@@ -197,9 +197,7 @@ function Page() {
     await createAction(data.studentId);
   };
 
-  const handleCloseCase = (id: string) => {
-    setCloseId(id);
-  };
+  const handleCloseCase = (id: string) => setCloseId(id);
 
   const handleConfirmClose = async () => {
     if (!closeId) return;
@@ -212,9 +210,7 @@ function Page() {
     }
   };
 
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
-  };
+  const handleDelete = (id: string) => setDeleteId(id);
 
   const handleConfirmDelete = async () => {
     if (!deleteId) return;
@@ -256,7 +252,7 @@ function Page() {
     <div className="p-4 sm:p-6">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">General Cases</h1>
-        <div className="flex gap-3 w-full md:w-auto">
+        <div className="flex gap-3 w-full md:w-auto items-center">
           <input
             placeholder="Search by student name..."
             className="flex-1 md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 disabled:opacity-50"
@@ -267,6 +263,23 @@ function Page() {
             }}
             disabled={isLoadingGeneralCases}
           />
+          <select
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500 disabled:opacity-50"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+            disabled={isLoadingGeneralCases}
+            aria-label="Rows per page"
+            title="Rows per page"
+          >
+            {[1, 10, 30, 100].map((n) => (
+              <option key={n} value={n}>
+                {n} / page
+              </option>
+            ))}
+          </select>
           <Button
             color="primary"
             variant="solid"
