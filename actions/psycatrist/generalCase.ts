@@ -76,12 +76,17 @@ export async function getGeneralCase(
 
 export async function createGeneralCase(studentId: number) {
   try {
+    // change the studentid type to int
+
+    const wdt_ID = parseInt(studentId as unknown as string);
+
     await prisma.studentGeneralCase.create({
       data: {
-        studentId,
+        studentId: wdt_ID,
         openFlag: 1,
       },
     });
+
     return { success: true, message: "General case created successfully" };
   } catch (error) {
     console.error("Error creating general case:", error);

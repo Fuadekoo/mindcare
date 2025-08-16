@@ -25,7 +25,7 @@ export const taskSchema = z.object({
 export type TaskType = z.infer<typeof taskSchema>;
 
 export const generalCaseSchema = z.object({
-  studentId: z.number(),
+  studentId: z.number().int(),
 });
 export type GeneralCaseType = z.infer<typeof generalCaseSchema>;
 

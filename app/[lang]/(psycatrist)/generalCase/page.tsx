@@ -11,6 +11,7 @@ import { Loader2, Plus } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { getStudents } from "@/actions/psycatrist/students";
 import CustomAlert from "@/components/custom-alert";
+import { generalCaseSchema } from "@/lib/zodSchema";
 import {
   getGeneralCase,
   createGeneralCase,
@@ -18,10 +19,6 @@ import {
   deleteGeneralCase,
   getGeneralCaseByStudentId,
 } from "@/actions/psycatrist/generalCase";
-
-const generalCaseCreateSchema = z.object({
-  studentId: z.number().int().min(1, "Student is required"),
-});
 
 type GeneralCaseRecord = {
   id: string;
@@ -31,7 +28,7 @@ type GeneralCaseRecord = {
 };
 
 type StudentOption = { value: number; label: string };
-type FormValues = z.infer<typeof generalCaseCreateSchema>;
+type FormValues = z.infer<typeof generalCaseSchema>;
 
 type GeneralCaseCardProps = {
   accent?: "blue" | "green" | "red" | "yellow";
@@ -179,7 +176,7 @@ function Page() {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(generalCaseCreateSchema),
+    resolver: zodResolver(generalCaseSchema),
     defaultValues: { studentId: 0 },
   });
 
