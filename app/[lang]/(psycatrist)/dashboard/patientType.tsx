@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import CustomAlert from "@/components/custom-alert";
 import {
   getPatientTypeData,
   deletePatientType,
@@ -32,6 +33,10 @@ function PatientTypePage() {
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<string | null>(null);
+
+  // NEW: Delete confirmation state
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Fetch data from server
   const [patientTypeData, refreshPatientTypes, isLoadingData] = useAction(
@@ -94,12 +99,6 @@ function PatientTypePage() {
     resolver: zodResolver(patientTypeSchema),
   });
 
-  const handleDelete = async (id: string | number) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      await executeDelete(id.toString());
-    }
-  };
-
   interface PatientTypeItem {
     id: string;
     type: string;
@@ -125,6 +124,23 @@ function PatientTypePage() {
     setEditItem(null);
     reset();
     setShowModal(true);
+  };
+
+  // NEW: open delete confirmation
+  const handleDelete = (id: string | number) => {
+    setDeleteId(String(id));
+  };
+
+  // NEW: confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      setPendingDeleteId(deleteId);
+      await executeDelete(deleteId);
+      setDeleteId(null);
+    } finally {
+      setPendingDeleteId(null);
+    }
   };
 
   const onSubmit = async (data: z.infer<typeof patientTypeSchema>) => {
@@ -184,7 +200,7 @@ function PatientTypePage() {
             color="danger"
             variant="flat"
             onPress={() => handleDelete(item.id)}
-            isLoading={isLoadingDelete}
+            isLoading={pendingDeleteId === item.id && isLoadingDelete}
           >
             Delete
           </Button>
@@ -230,6 +246,7 @@ function PatientTypePage() {
         }}
         isLoading={isLoadingData}
       />
+
       {/* Modal for Add/Edit */}
       {showModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
@@ -280,6 +297,24 @@ function PatientTypePage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {deleteId && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 flex justify-center items-center p-4 z-50">
+          <div className="w-full max-w-sm">
+            <CustomAlert
+              color="danger"
+              title="Delete patient type?"
+              description="This action cannot be undone."
+              confirmText="Delete"
+              cancelText="Cancel"
+              onConfirm={handleConfirmDelete}
+              onCancel={() => setDeleteId(null)}
+              isConfirmLoading={pendingDeleteId === deleteId && isLoadingDelete}
+            />
           </div>
         </div>
       )}
