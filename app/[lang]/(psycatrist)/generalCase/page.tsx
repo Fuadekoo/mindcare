@@ -20,7 +20,7 @@ import {
 } from "@/actions/psycatrist/generalCase";
 
 const generalCaseCreateSchema = z.object({
-  studentId: z.number().min(1, "Student is required"),
+  studentId: z.number().int().min(1, "Student is required"),
 });
 
 type GeneralCaseRecord = {
