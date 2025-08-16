@@ -35,13 +35,24 @@ const authConfig = {
   },
   callbacks: {
     authorized: async ({ auth, request: { nextUrl } }) => {
-      if (auth) {
-        if (nextUrl.pathname.startsWith("/en/signin")) {
-          return Response.redirect(new URL("/en/dashboard", nextUrl));
-        } else return true;
-      } else if (nextUrl.pathname.startsWith("/en")) {
-        return false;
-      } else return true;
+      const { pathname } = nextUrl;
+      // If logged-in user hits /en/signin, send to dashboard
+      if (auth && pathname.startsWith("/en/signin")) {
+        return Response.redirect(new URL("/en/dashboard", nextUrl));
+      }
+
+      // Public pages accessible without login
+      const publicPaths = ["/en/about", "/en/signin"];
+      if (publicPaths.some((p) => pathname.startsWith(p))) {
+        return true;
+      }
+
+      // Protect all other /en/* routes
+      if (!auth && pathname.startsWith("/en")) {
+        return false; // NextAuth will redirect to pages.signIn
+      }
+
+      return true;
     },
 
     jwt: async ({ token, user }) => {
