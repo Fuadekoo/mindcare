@@ -17,9 +17,9 @@ export async function getCaseCard(
 
     if (search) {
       where.OR = [
-        { historyCode: { contains: search, mode: "insensitive" } },
-        { note: { contains: search, mode: "insensitive" } },
-        { student: { name: { contains: search, mode: "insensitive" } } },
+        { historyCode: { contains: search } },
+        { note: { contains: search } },
+        { student: { name: { contains: search } } },
       ];
     }
 

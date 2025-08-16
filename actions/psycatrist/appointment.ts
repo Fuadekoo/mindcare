@@ -17,14 +17,20 @@ export async function getAppointments(
 
     const where: any = {};
 
-    if (search) {
-      where.student = {
-        name: {
-          contains: search,
-          mode: "insensitive", // Case-insensitive search
+    
+    if (search && search.trim().length > 0) {
+      const s = search.trim();
+      const isNumeric = /^\d+$/.test(s);
+      // Filter by related Student through the Case relation
+      where.case = {
+        is: {
+          student: {
+            is: isNumeric ? { wdt_ID: Number(s) } : { name: { contains: s } }, // avoid mode: "insensitive" if unsupported
+          },
         },
       };
     }
+
 
     if (startDate && endDate) {
       const endOfDay = new Date(endDate);
@@ -76,7 +82,6 @@ export async function createAppointment(data: {
   date: Date;
   time: string;
 }) {
-  
   const schema = z.object({
     caseId: z.string().min(1, "Case ID is required"),
     date: z.coerce.date(),

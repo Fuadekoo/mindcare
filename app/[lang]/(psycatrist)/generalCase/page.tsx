@@ -67,11 +67,22 @@ function GeneralCaseCard({
   );
 }
 
+// Simple debounce hook
+function useDebounce<T>(value: T, delay = 500) {
+  const [debounced, setDebounced] = useState<T>(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
 function Page() {
   const router = useRouter();
   const params = useParams<{ lang: string }>();
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [showModal, setShowModal] = useState(false);
@@ -84,8 +95,18 @@ function Page() {
   const [closeId, setCloseId] = useState<string | null>(null);
   const [pendingCloseId, setPendingCloseId] = useState<string | null>(null);
 
+  // Only search when user stops typing and when query length >= 2 (or empty for all)
+  const q = debouncedSearch.trim();
+  const effectiveSearch = q.length >= 2 ? q : "";
+
   const [generalCasesResponse, refreshGeneralCases, isLoadingGeneralCases] =
-    useAction(getGeneralCase, [true, () => {}], search, page, pageSize);
+    useAction(
+      getGeneralCase,
+      [true, () => {}],
+      effectiveSearch,
+      page,
+      pageSize
+    );
 
   const [, createAction, isCreating] = useAction(createGeneralCase, [
     undefined,
@@ -195,7 +216,6 @@ function Page() {
     setDeleteId(id);
   };
 
-  // Confirm delete
   const handleConfirmDelete = async () => {
     if (!deleteId) return;
     try {

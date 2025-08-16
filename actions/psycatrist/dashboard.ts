@@ -128,7 +128,7 @@ export async function getPatientTypeData(
 
     const where = search
       ? {
-          OR: [{ type: { contains: search, mode: "insensitive" } }],
+          OR: [{ type: { contains: search } }],
         }
       : {};
 

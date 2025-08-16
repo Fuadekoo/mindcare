@@ -80,8 +80,10 @@ function Page() {
 
   const [studentsResponse, , isLoadingStudents] = useAction(getStudents, [
     true,
-    () => {},
-  ]);
+      () => {},
+    ]);
+    
+
 
   const [, createAction, isCreatingAppointment] = useAction(createAppointment, [
     ,

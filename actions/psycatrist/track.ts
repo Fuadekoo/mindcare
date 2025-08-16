@@ -10,14 +10,14 @@ export async function getTrack(
     // Build search filter for students
     const where = {
       status: { in: ["Active", "Not yet"] }, // <-- Add this line
-      StudentGeneralCase: {
-        some: {},
-      },
+      // StudentGeneralCase: {
+      //   some: {},
+      // },
       ...(search
         ? {
             OR: [
               ...(isNaN(Number(search)) ? [] : [{ wdt_ID: Number(search) }]),
-              { name: { contains: search, mode: "insensitive" } },
+              { name: { contains: search } },
             ],
           }
         : {}),

@@ -32,7 +32,7 @@ export async function getGeneralCase(
     const where = search
       ? {
           student: {
-            name: { contains: search, mode: "insensitive" },
+            name: { contains: search },
           },
         }
       : {};
