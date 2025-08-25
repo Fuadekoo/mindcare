@@ -65,7 +65,7 @@ model StudentGeneralCase {
   history   history[]
 
   // Enforce: at most one "open" per student (NULLs are allowed multiple times)
-  @@unique([studentId, openFlag], map: "uniq_student_open_case")
+  // @@unique([studentId, openFlag], map: "uniq_student_open_case")
 }
 
 // history model (it has a diagonistic,obervation, and treatmentor medication)
@@ -88,6 +88,7 @@ model history {
   StudentGeneralCase   StudentGeneralCase @relation(fields: [studentGeneralCaseId], references: [id])
   studentGeneralCaseId String
   priority             Int
+  assessment           assessment[]
 
   @@unique([studentId, priority])
 }
@@ -101,6 +102,14 @@ model diagnosis {
 }
 
 model observation {
+  id          String   @id @default(cuid())
+  description String
+  historyId   String
+  history     history  @relation(fields: [historyId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model assessment {
   id          String   @id @default(cuid())
   description String
   historyId   String

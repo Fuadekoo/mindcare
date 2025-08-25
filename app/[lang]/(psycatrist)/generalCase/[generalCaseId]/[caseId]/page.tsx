@@ -19,6 +19,9 @@ import {
   getallObservationPerCase,
   getallTreatmentPerCase,
   lastCaseUpdate,
+  getallAssessmentPerCase,
+  createAssessment,
+  deleteAssessment,
 } from "@/actions/psycatrist/case";
 
 type SectionItem = {
@@ -201,6 +204,19 @@ function Page() {
     caseId as string
   );
 
+  const [assessmentResponse, refreshAssessment] = useAction(
+    getallAssessmentPerCase,
+    [
+      true,
+      (res) => {
+        if (!res) {
+          toastError("Failed to load diagnoses.");
+        }
+      },
+    ],
+    caseId as string
+  );
+
   const [treatmentResponse, refreshTreatment] = useAction(
     getallTreatmentPerCase,
     [
@@ -262,6 +278,34 @@ function Page() {
           res,
           res?.message || "Observation deleted successfully.",
           refreshObservation
+        );
+      },
+    ]
+  );
+
+  const [, createAssessmentAction, isCreatingAssessment] = useAction(
+    createAssessment,
+    [
+      ,
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Assessment created successfully.",
+          refreshAssessment
+        );
+      },
+    ]
+  );
+
+  const [, deleteAssessmentAction, isDeletingAssessment] = useAction(
+    deleteAssessment,
+    [
+      ,
+      (res) => {
+        handleActionCompletion(
+          res,
+          res?.message || "Treatment deleted successfully.",
+          refreshTreatment
         );
       },
     ]
@@ -335,6 +379,19 @@ function Page() {
       })) || []
     );
   }, [observationResponse]);
+
+  const AssessmentsItems = useMemo(() => {
+    return (
+      assessmentResponse?.map((item) => ({
+        id: item.id,
+        description: item.description,
+        createdAt:
+          typeof item.createdAt === "string"
+            ? item.createdAt
+            : item.createdAt.toISOString(),
+      })) || []
+    );
+  }, [assessmentResponse]);
 
   const treatmentsItems = useMemo(() => {
     return (
@@ -468,7 +525,7 @@ function Page() {
           )}
         </div>
       </div>
-      <div className="bg-white/100 shadow-secondary-400 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+      <div className="bg-white/100 shadow-secondary-400 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
         <EditableSection
           title="History"
           items={diagnosesItems}
@@ -485,6 +542,16 @@ function Page() {
           isCreating={isCreatingObservation}
           isDeleting={isDeletingObservation}
         />
+
+        <EditableSection
+          title="Assessment"
+          items={AssessmentsItems}
+          onAddItem={(text) => createAssessmentAction(caseId as string, text)}
+          onDeleteItem={(id) => deleteAssessmentAction(id)}
+          isCreating={isCreatingAssessment}
+          isDeleting={isDeletingAssessment}
+        />
+
         <EditableSection
           title="treatment"
           items={treatmentsItems}

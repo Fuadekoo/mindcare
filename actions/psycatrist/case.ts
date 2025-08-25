@@ -265,6 +265,45 @@ export async function deleteObservation(id: string) {
   }
 }
 
+// assessment
+export async function getallAssessmentPerCase(id: string) {
+  try {
+    const assessments = await prisma.assessment.findMany({
+      where: { historyId: id },
+    });
+    return assessments;
+  } catch (error) {
+    console.error("Error fetching assessments:", error);
+    return [];
+  }
+}
+export async function createAssessment(caseId: string, description: string) {
+  try {
+    const newAssessment = await prisma.assessment.create({
+      data: {
+        historyId: caseId,
+        description,
+      },
+    });
+    return { message: "Assessment created successfully" };
+  } catch (error) {
+    console.error("Error creating assessment:", error);
+    return { message: "Failed to create assessment" };
+  }
+}
+export async function deleteAssessment(id: string) {
+  try {
+    await prisma.assessment.delete({
+      where: { id },
+    });
+    return { message: "Assessment deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting assessment:", error);
+    return { message: "Failed to delete assessment  " };
+  }
+}
+//  fot the assessment the above one
+
 export async function getallTreatmentPerCase(caseId: string) {
   try {
     const treatments = await prisma.treatment.findMany({
