@@ -305,7 +305,7 @@ function Page() {
         handleActionCompletion(
           res,
           res?.message || "Treatment deleted successfully.",
-          refreshTreatment
+          refreshAssessment
         );
       },
     ]
