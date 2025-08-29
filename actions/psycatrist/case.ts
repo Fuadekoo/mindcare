@@ -228,6 +228,31 @@ export async function deleteDiagnosis(id: string) {
   }
 }
 
+export async function oneDiagnosis(id: string) {
+  try {
+    const diagnosis = await prisma.diagnosis.findUnique({
+      where: { id },
+    });
+    return diagnosis;
+  } catch (error) {
+    console.error("Error fetching diagnosis:", error);
+    return null;
+  }
+}
+
+export async function editDiagnosis(id: string, description: string) {
+  try {
+    await prisma.diagnosis.update({
+      where: { id },
+      data: { description },
+    });
+    return { message: "Diagnosis updated successfully" };
+  } catch (error) {
+    console.error("Error updating diagnosis:", error);
+    return { message: "Failed to update diagnosis" };
+  }
+}
+
 export async function getallObservationPerCase(caseId: string) {
   try {
     const observations = await prisma.observation.findMany({
@@ -253,6 +278,32 @@ export async function createObservation(caseId: string, description: string) {
     return { message: "Failed to create observation" };
   }
 }
+
+export async function oneObservation(id: string) {
+  try {
+    const observation = await prisma.observation.findUnique({
+      where: { id },
+    });
+    return observation;
+  } catch (error) {
+    console.error("Error fetching observation:", error);
+    return null;
+  }
+}
+
+export async function editObservation(id: string, description: string) {
+  try {
+    await prisma.observation.update({
+      where: { id },
+      data: { description },
+    });
+    return { message: "Observation updated successfully" };
+  } catch (error) {
+    console.error("Error updating observation:", error);
+    return { message: "Failed to update observation" };
+  }
+}
+
 export async function deleteObservation(id: string) {
   try {
     await prisma.observation.delete({
@@ -291,6 +342,32 @@ export async function createAssessment(caseId: string, description: string) {
     return { message: "Failed to create assessment" };
   }
 }
+
+export async function oneAssessment(id: string) {
+  try {
+    const assessment = await prisma.assessment.findUnique({
+      where: { id },
+    });
+    return assessment;
+  } catch (error) {
+    console.error("Error fetching assessment:", error);
+    return null;
+  }
+}
+
+export async function editAssessment(id: string, description: string) {
+  try {
+    await prisma.assessment.update({
+      where: { id },
+      data: { description },
+    });
+    return { message: "Assessment updated successfully" };
+  } catch (error) {
+    console.error("Error updating assessment:", error);
+    return { message: "Failed to update assessment" };
+  }
+}
+
 export async function deleteAssessment(id: string) {
   try {
     await prisma.assessment.delete({
@@ -328,6 +405,31 @@ export async function createTreatment(caseId: string, description: string) {
   } catch (error) {
     console.error("Error creating treatment:", error);
     return { message: "Failed to create treatment" };
+  }
+}
+
+export async function editTreatment(id: string, description: string) {
+  try {
+    await prisma.treatment.update({
+      where: { id },
+      data: { description },
+    });
+    return { message: "Treatment updated successfully" };
+  } catch (error) {
+    console.error("Error updating treatment:", error);
+    return { message: "Failed to update treatment" };
+  }
+}
+
+export async function oneTreatment(id: string) {
+  try {
+    const treatment = await prisma.treatment.findUnique({
+      where: { id },
+    });
+    return treatment;
+  } catch (error) {
+    console.error("Error fetching treatment:", error);
+    return null;
   }
 }
 
@@ -393,10 +495,12 @@ export async function caseDetails(caseId: string) {
 // }
 
 export async function getCasePerStudent(id: number) {
+  // convert id to string
+  const studentId = typeof id === "string" ? parseInt(id) : id;
   try {
     const cases = await prisma.history.findMany({
       where: {
-        student: { wdt_ID: id },
+        student: { wdt_ID: studentId },
         solved: false,
         StudentGeneralCase: { status: "open" },
       },
@@ -409,6 +513,7 @@ export async function getCasePerStudent(id: number) {
     // console.log("Cases for student:", cases);
     return { data: cases };
   } catch (error) {
+    console.log("Cases for student error:", error);
     // console.error("Error fetching cases for student:", error);
     return { data: [] };
   }

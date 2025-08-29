@@ -1,7 +1,14 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { Textarea } from "@heroui/react";
-import { ArrowLeft, X, ToggleLeft, ToggleRight, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  X,
+  ToggleLeft,
+  ToggleRight,
+  Check,
+  Pencil,
+} from "lucide-react";
 import { Loader2 } from "lucide-react";
 import useAction from "@/hooks/useActions";
 import { addToast } from "@heroui/toast";
@@ -22,6 +29,14 @@ import {
   getallAssessmentPerCase,
   createAssessment,
   deleteAssessment,
+  editDiagnosis,
+  oneDiagnosis,
+  editObservation,
+  oneObservation,
+  editAssessment,
+  oneAssessment,
+  editTreatment,
+  oneTreatment,
 } from "@/actions/psycatrist/case";
 
 type SectionItem = {
@@ -70,15 +85,29 @@ function EditableSection({
   items,
   onAddItem,
   onDeleteItem,
+  onEditItem, // <-- new prop
+  onFetchItem, // <-- new prop
   isCreating,
   isDeleting,
+  isEditing,
+  editingId,
+  editingValue,
+  setEditingValue,
+  onCancelEdit,
 }: {
   title: string;
   items: SectionItem[];
   onAddItem: (item: string) => void;
   onDeleteItem: (id: string) => void;
+  onEditItem: (id: string, value: string) => void;
+  onFetchItem: (id: string) => void;
   isCreating: boolean;
   isDeleting: boolean;
+  isEditing: boolean;
+  editingId: string | null;
+  editingValue: string;
+  setEditingValue: (val: string) => void;
+  onCancelEdit: () => void;
 }) {
   const [inputValue, setInputValue] = useState("");
 
@@ -106,22 +135,66 @@ function EditableSection({
         {items.map((item) => (
           <li
             key={item.id}
-            className="relative p-3 bg-primary-50 border border-primary-200 rounded-lg shadow-sm text-primary-900 group"
+            className={`relative p-3 bg-primary-50 border border-primary-200 rounded-lg shadow-sm text-primary-900 group ${
+              editingId === item.id ? "ring-2 ring-secondary-500" : ""
+            }`}
           >
-            <p className="whitespace-pre-wrap break-words pr-6">
-              {item.description}
-            </p>
-            <p className="text-xs text-primary-400 mt-1">
-              {formatDate(item.createdAt)}
-            </p>
-            <button
-              onClick={() => onDeleteItem(item.id)}
-              disabled={isDeleting}
-              className="absolute top-2 right-2 text-primary-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
-              aria-label={`Delete ${title} item`}
-            >
-              <X size={16} />
-            </button>
+            {editingId === item.id ? (
+              <div>
+                <Textarea
+                  value={editingValue}
+                  onChange={(e) => setEditingValue(e.target.value)}
+                  rows={3}
+                  className="w-full p-2 border-b-2 border-secondary-500 focus:outline-none"
+                  disabled={isEditing}
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => onEditItem(item.id, editingValue)}
+                    disabled={isEditing || !editingValue.trim()}
+                    className="px-3 py-1 bg-secondary-600 text-white rounded hover:bg-secondary-700 transition"
+                  >
+                    {isEditing ? (
+                      <Loader2 className="animate-spin h-4 w-4" />
+                    ) : (
+                      "Save"
+                    )}
+                  </button>
+                  <button
+                    onClick={onCancelEdit}
+                    disabled={isEditing}
+                    className="px-3 py-1 bg-primary-200 text-primary-700 rounded hover:bg-primary-300 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="whitespace-pre-wrap break-words pr-10">
+                  {item.description}
+                </p>
+                <p className="text-xs text-primary-400 mt-1">
+                  {formatDate(item.createdAt)}
+                </p>
+                <button
+                  onClick={() => onFetchItem(item.id)}
+                  disabled={isEditing}
+                  className="absolute top-2 right-8 text-primary-400 hover:text-secondary-600 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                  aria-label={`Edit ${title} item`}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  onClick={() => onDeleteItem(item.id)}
+                  disabled={isDeleting || isEditing}
+                  className="absolute top-2 right-2 text-primary-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                  aria-label={`Delete ${title} item`}
+                >
+                  <X size={16} />
+                </button>
+              </>
+            )}
           </li>
         ))}
       </ul>
@@ -353,6 +426,138 @@ function Page() {
     caseId
   );
 
+  // --- Edit state ---
+  const [editingType, setEditingType] = useState<string | null>(null); // "diagnosis", "observation", etc.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
+  // --- Fetch single item for edit ---
+  const [, fetchDiagnosisItem] = useAction(oneDiagnosis, [
+    ,
+    (res) => {
+      if (res?.description) {
+        setEditingValue(res.description);
+        setIsEditing(false);
+      }
+    },
+  ]);
+  const [, fetchObservationItem] = useAction(oneObservation, [
+    ,
+    (res) => {
+      if (res?.description) {
+        setEditingValue(res.description);
+        setIsEditing(false);
+      }
+    },
+  ]);
+  const [, fetchAssessmentItem] = useAction(oneAssessment, [
+    ,
+    (res) => {
+      if (res?.description) {
+        setEditingValue(res.description);
+        setIsEditing(false);
+      }
+    },
+  ]);
+  const [, fetchTreatmentItem] = useAction(oneTreatment, [
+    ,
+    (res) => {
+      if (res?.description) {
+        setEditingValue(res.description);
+        setIsEditing(false);
+      }
+    },
+  ]);
+
+  // --- Edit actions ---
+  const [, editDiagnosisAction] = useAction(editDiagnosis, [
+    ,
+    (res) => {
+      handleActionCompletion(res, "Diagnosis updated.", refreshDiagnosis);
+      setEditingId(null);
+      setEditingType(null);
+      setEditingValue("");
+      setIsEditing(false);
+    },
+  ]);
+  const [, editObservationAction] = useAction(editObservation, [
+    ,
+    (res) => {
+      handleActionCompletion(res, "Observation updated.", refreshObservation);
+      setEditingId(null);
+      setEditingType(null);
+      setEditingValue("");
+      setIsEditing(false);
+    },
+  ]);
+  const [, editAssessmentAction] = useAction(editAssessment, [
+    ,
+    (res) => {
+      handleActionCompletion(res, "Assessment updated.", refreshAssessment);
+      setEditingId(null);
+      setEditingType(null);
+      setEditingValue("");
+      setIsEditing(false);
+    },
+  ]);
+  const [, editTreatmentAction] = useAction(editTreatment, [
+    ,
+    (res) => {
+      handleActionCompletion(res, "Treatment updated.", refreshTreatment);
+      setEditingId(null);
+      setEditingType(null);
+      setEditingValue("");
+      setIsEditing(false);
+    },
+  ]);
+
+  // --- Handlers ---
+  const handleFetchItem = (type: string, id: string) => {
+    setEditingType(type);
+    setEditingId(id);
+    setIsEditing(true);
+    switch (type) {
+      case "diagnosis":
+        fetchDiagnosisItem(id);
+        break;
+      case "observation":
+        fetchObservationItem(id);
+        break;
+      case "assessment":
+        fetchAssessmentItem(id);
+        break;
+      case "treatment":
+        fetchTreatmentItem(id);
+        break;
+    }
+  };
+
+  const handleEditItem = (type: string, id: string, value: string) => {
+    setIsEditing(true);
+    switch (type) {
+      case "diagnosis":
+        editDiagnosisAction(id, value);
+        break;
+      case "observation":
+        editObservationAction(id, value);
+        break;
+      case "assessment":
+        editAssessmentAction(id, value);
+        break;
+      case "treatment":
+        editTreatmentAction(id, value);
+        break;
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingType(null);
+    setEditingValue("");
+    setIsEditing(false);
+  };
+
   // Memoized data transformation
   const diagnosesItems = useMemo(() => {
     return (
@@ -531,34 +736,60 @@ function Page() {
           items={diagnosesItems}
           onAddItem={(text) => createDiagnosisAction(caseId as string, text)}
           onDeleteItem={(id) => deleteDiagnosisAction(id)}
+          onEditItem={(id, value) => handleEditItem("diagnosis", id, value)}
+          onFetchItem={(id) => handleFetchItem("diagnosis", id)}
           isCreating={isCreatingDiagnosis}
           isDeleting={isDeletingDiagnosis}
+          isEditing={isEditing && editingType === "diagnosis"}
+          editingId={editingType === "diagnosis" ? editingId : null}
+          editingValue={editingValue}
+          setEditingValue={setEditingValue}
+          onCancelEdit={handleCancelEdit}
         />
         <EditableSection
           title="Diagnosis"
           items={observationsItems}
           onAddItem={(text) => createObservationAction(caseId as string, text)}
           onDeleteItem={(id) => deleteObservationAction(id)}
+          onEditItem={(id, value) => handleEditItem("observation", id, value)}
+          onFetchItem={(id) => handleFetchItem("observation", id)}
           isCreating={isCreatingObservation}
           isDeleting={isDeletingObservation}
+          isEditing={isEditing && editingType === "observation"}
+          editingId={editingType === "observation" ? editingId : null}
+          editingValue={editingValue}
+          setEditingValue={setEditingValue}
+          onCancelEdit={handleCancelEdit}
         />
-
         <EditableSection
           title="Assessment"
           items={AssessmentsItems}
           onAddItem={(text) => createAssessmentAction(caseId as string, text)}
           onDeleteItem={(id) => deleteAssessmentAction(id)}
+          onEditItem={(id, value) => handleEditItem("assessment", id, value)}
+          onFetchItem={(id) => handleFetchItem("assessment", id)}
           isCreating={isCreatingAssessment}
           isDeleting={isDeletingAssessment}
+          isEditing={isEditing && editingType === "assessment"}
+          editingId={editingType === "assessment" ? editingId : null}
+          editingValue={editingValue}
+          setEditingValue={setEditingValue}
+          onCancelEdit={handleCancelEdit}
         />
-
         <EditableSection
           title="treatment"
           items={treatmentsItems}
           onAddItem={(text) => createTreatmentAction(caseId as string, text)}
           onDeleteItem={(id) => deleteTreatmentAction(id)}
+          onEditItem={(id, value) => handleEditItem("treatment", id, value)}
+          onFetchItem={(id) => handleFetchItem("treatment", id)}
           isCreating={isCreatingTreatment}
           isDeleting={isDeletingTreatment}
+          isEditing={isEditing && editingType === "treatment"}
+          editingId={editingType === "treatment" ? editingId : null}
+          editingValue={editingValue}
+          setEditingValue={setEditingValue}
+          onCancelEdit={handleCancelEdit}
         />
       </div>
       <div className="h-20 gap-4"></div>

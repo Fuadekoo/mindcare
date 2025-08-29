@@ -102,10 +102,7 @@ function Page() {
   //   [, () => {}]
   // );
 
-  // const [caseResponse, perStudentCaseAction, isLoadingCase] = useAction(
-  //   getCasePerStudent,
-  //   [, () => {}]
-  // );
+  const [, , isLoadingCase] = useAction(getCasePerStudent, [, () => {}]);
 
   const [studentCases, setStudentCases] = useState<CaseItem[]>([]);
 
@@ -208,22 +205,63 @@ function Page() {
     setShowGeneralCaseModal(true);
   };
 
+  // const handleOpenAppointmentModal = async (student: Student) => {
+  //   setSelectedStudent(student);
+  //   appointmentForm.reset();
+  //   // Fetch cases via action
+  //   try {
+  //     const res = perStudentCaseAction(student.id);
+  //     // const res = await getCasePerStudent(student.id);
+  //     console.log("Cases for student:", res);
+  //     let cases: CaseItem[] = [];
+  //     if (caseResponse && Array.isArray(caseResponse.data)) {
+  //       cases = caseResponse.data.map((c) => ({
+  //         id: c.id,
+  //         createdAt:
+  //       typeof c.createdAt === "string"
+  //         ? c.createdAt
+  //         : c.createdAt?.toISOString?.() ?? "",
+  //       }));
+  //     }
+  //     // if (Array.isArray(res?.data))
+  //     //   cases = res.data.map((c: { id: string; createdAt: Date | string }) => ({
+  //     //     ...c,
+  //     //     createdAt:
+  //     //       typeof c.createdAt === "string"
+  //     //         ? c.createdAt
+  //     //         : c.createdAt.toISOString(),
+  //     //   }));
+  //     setStudentCases(cases);
+  //     if (cases.length === 1) {
+  //       appointmentForm.setValue("caseId", cases[0].id);
+  //     }
+  //   } catch (e) {
+  //     console.error("getCasePerStudent error:", e);
+  //     setStudentCases([]);
+  //   }
+  //   setShowAppointmentModal(true);
+  // };
+
+  // ...existing code...
   const handleOpenAppointmentModal = async (student: Student) => {
     setSelectedStudent(student);
     appointmentForm.reset();
-    // Fetch cases via action
+
+    // Fetch cases via action (real-time)
     try {
-      const res = await getCasePerStudent(student.id);
+      const res = await getCasePerStudent(student.id); // <-- use the action!
+
       console.log("Cases for student:", res);
       let cases: CaseItem[] = [];
-      if (Array.isArray(res?.data))
-        cases = res.data.map((c: { id: string; createdAt: Date | string }) => ({
-          ...c,
+      if (res && Array.isArray(res.data)) {
+        cases = res.data.map((c) => ({
+          id: c.id,
           createdAt:
             typeof c.createdAt === "string"
               ? c.createdAt
-              : c.createdAt.toISOString(),
+              : c.createdAt?.toISOString?.() ?? "",
         }));
+      }
       setStudentCases(cases);
       if (cases.length === 1) {
         appointmentForm.setValue("caseId", cases[0].id);
@@ -740,7 +778,7 @@ function Page() {
                     required
                   >
                     <option value="">
-                      {studentCases.length === 0
+                      {isLoadingCase
                         ? "Loading cases..."
                         : studentCases.length === 0
                         ? "No cases found"
