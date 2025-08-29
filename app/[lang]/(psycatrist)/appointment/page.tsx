@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import Select from "react-select";
 import useAction from "@/hooks/useActions";
-import { getStudents } from "@/actions/psycatrist/students";
+import { studentSelectData } from "@/actions/psycatrist/students";
 import {
   changeAppointmentStatus,
   getAppointments,
@@ -78,12 +78,10 @@ function Page() {
       endDate
     );
 
-  const [studentsResponse, , isLoadingStudents] = useAction(getStudents, [
+  const [studentsResponse, , isLoadingStudents] = useAction(studentSelectData, [
     true,
-      () => {},
-    ]);
-    
-
+    () => {},
+  ]);
 
   const [, createAction, isCreatingAppointment] = useAction(createAppointment, [
     ,
@@ -174,8 +172,8 @@ function Page() {
 
   // Student select options
   const studentOptions = useMemo(() => {
-    if (!studentsResponse?.data) return [];
-    return studentsResponse.data.map(
+    if (!studentsResponse || !Array.isArray(studentsResponse)) return [];
+    return studentsResponse.map(
       (student: { wdt_ID: number; name: string | null }) => ({
         value: student.wdt_ID,
         label: `${student.wdt_ID} - ${student.name ?? ""}`,
@@ -468,7 +466,6 @@ function Page() {
                     isLoading={isLoadingStudents}
                     value={
                       studentOptions.find(
-                        
                         (s) => s.value === selectedStudentId
                       ) || null
                     }

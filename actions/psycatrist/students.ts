@@ -118,3 +118,16 @@ export async function studentData() {
     return null;
   }
 }
+
+export async function studentSelectData() {
+  try {
+    const student = await prisma.student.findMany({
+      where: { status: { in: ["active", "Not yet"] } },
+      select: { wdt_ID: true, name: true },
+    });
+    return student;
+  } catch (error) {
+    console.error("Error fetching student name:", error);
+    return null;
+  }
+}
